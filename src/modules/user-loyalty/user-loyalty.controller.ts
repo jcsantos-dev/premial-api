@@ -30,6 +30,11 @@ export class UserLoyaltyController {
     return this.userLoyaltyService.findOne(id);
   }
 
+  @Get('store/:storeId')
+  findByStore(@Param('storeId') storeId: string) {
+    return this.userLoyaltyService.findByStore(storeId);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,

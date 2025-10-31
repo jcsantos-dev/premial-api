@@ -13,11 +13,21 @@ export class UserLoyaltyService {
   ) {}
 
   findAll() {
-    return this.repo.find();
+    return this.repo.find({
+      relations: ['userCustomer', 'userCustomer.user'], // incluir la relación con UserCustomer y User
+    });
   }
 
   findOne(id: string) {
     return this.repo.findOne({ where: { id } });
+  }
+
+  // 🔹 Nuevo método para buscar por store
+  findByStore(storeId: string) {
+    return this.repo.find({
+      where: { storeId: storeId.toString() }, // convertir a número si tu storeId es bigint
+      relations: ['userCustomer', 'userCustomer.user'], // incluir la relación con UserCustomer
+    });
   }
 
   async create(dto: CreateUserLoyaltyDto) {

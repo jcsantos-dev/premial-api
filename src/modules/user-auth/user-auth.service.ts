@@ -13,7 +13,9 @@ export class UserAuthService {
   ) {}
 
   findAll() {
-    return this.repo.find();
+    return this.repo.find({
+      relations: ['user', 'authType'],
+    });
   }
 
   findOne(id: string) {
@@ -35,5 +37,12 @@ export class UserAuthService {
     const entity = await this.repo.findOne({ where: { id } });
     if (!entity) throw new NotFoundException('UserAuth not found');
     return this.repo.remove(entity);
+  }
+
+  async findByEmail(email: string) {
+    return this.repo.findOne({
+      where: { authUserProviderId: email },
+      relations: ['user'],
+    });
   }
 }

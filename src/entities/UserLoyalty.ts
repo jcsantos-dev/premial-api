@@ -7,17 +7,17 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Store } from './Store';
-import { User } from './User';
+import { UserCustomer } from './UserCustomer';
 
 @Index('user_loyalty_pkey', ['id'], { unique: true })
-@Index('uq_user_loyalty', ['storeId', 'userId'], { unique: true })
+@Index('uq_user_loyalty', ['storeId', 'userCustomerId'], { unique: true })
 @Entity('user_loyalty', { schema: 'public' })
 export class UserLoyalty {
   @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })
   id: string;
 
-  @Column('bigint', { name: 'user_id', unique: true })
-  userId: string;
+  @Column('bigint', { name: 'user_customer_id', unique: true })
+  userCustomerId: string;
 
   @Column('bigint', { name: 'store_id', nullable: true, unique: true })
   storeId: string | null;
@@ -50,7 +50,12 @@ export class UserLoyalty {
   @JoinColumn([{ name: 'store_id', referencedColumnName: 'id' }])
   store: Store;
 
-  @ManyToOne(() => User, (user) => user.userLoyalties)
+  /*@ManyToOne(() => User, (user) => user.userLoyalties)
   @JoinColumn([{ name: 'user_id', referencedColumnName: 'id' }])
-  user: User;
+  user: User;*/
+
+  // 👇 aquí el cambio: relación hacia UserCustomer, no User
+  @ManyToOne(() => UserCustomer, (userCustomer) => userCustomer.userLoyalties)
+  @JoinColumn([{ name: 'user_customer_id', referencedColumnName: 'id' }])
+  userCustomer: UserCustomer;
 }

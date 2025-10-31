@@ -20,15 +20,27 @@ export class StoreService {
         'programs.programType',
         'streakConfs',
         'userLevels',
-        //'userLoyalties',
-        //'userLoyaltyLogs',
-        //'userStreaks',
+        'userLoyalties',
+        'userLoyaltyLogs',
+        'userStreaks',
       ],
     }); // devuelve todos los couponTypes
   }
 
   findOne(id: string) {
-    return this.repo.findOne({ where: { id } });
+    return this.repo.findOne({
+      where: { id },
+      relations: [
+        'coupons',
+        'levelConfs.levelType',
+        'programs.programType',
+        'streakConfs',
+        'userLevels',
+        'userLoyalties',
+        'userLoyaltyLogs',
+        'userStreaks',
+      ],
+    });
   }
 
   async create(dto: CreateStoreDto) {

@@ -30,6 +30,11 @@ export class ProgramController {
     return this.programsService.findOne(id);
   }
 
+  @Get('store/:storeId')
+  findByStore(@Param('storeId') storeId: string) {
+    return this.programsService.findByStore(storeId);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateProgramDto: UpdateProgramDto) {
     return this.programsService.update(id, updateProgramDto);

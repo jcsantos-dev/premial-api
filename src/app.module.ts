@@ -27,6 +27,7 @@ import { UserLoyaltyModule } from './modules/user-loyalty/user-loyalty.module';
 import { UserLoyaltyLogModule } from './modules/user-loyalty-log/user-loyalty-log.module';
 import { UserRolesModule } from './modules/user-roles/user-roles.module';
 import { UserStreakModule } from './modules/user-streak/user-streak.module';
+import { AuthModule } from './modules/auth/auth.module';
 import databaseConfig from './db/config/database.config';
 
 @Module({
@@ -78,6 +79,7 @@ import databaseConfig from './db/config/database.config';
     UserLoyaltyLogModule,
     UserRolesModule,
     UserStreakModule,
+    AuthModule,
 
     /*TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

@@ -8,7 +8,6 @@ import {
 import { UserAuth } from './UserAuth';
 import { UserCustomer } from './UserCustomer';
 import { UserLevel } from './UserLevel';
-import { UserLoyalty } from './UserLoyalty';
 import { UserLoyaltyLog } from './UserLoyaltyLog';
 import { UserPlatform } from './UserPlatform';
 import { UserStore } from './UserStore';
@@ -22,6 +21,9 @@ export class User {
 
   @Column('character varying', { name: 'email', length: 255 })
   email: string;
+
+  @Column({ unique: true, nullable: true })
+  phone?: string;
 
   @Column('character varying', { name: 'first_name', length: 255 })
   firstName: string;
@@ -44,8 +46,8 @@ export class User {
   @OneToMany(() => UserLevel, (userLevel) => userLevel.user)
   userLevels: UserLevel[];
 
-  @OneToMany(() => UserLoyalty, (userLoyalty) => userLoyalty.user)
-  userLoyalties: UserLoyalty[];
+  /*@OneToMany(() => UserLoyalty, (userLoyalty) => userLoyalty.user)
+  userLoyalties: UserLoyalty[];*/
 
   @OneToMany(
     () => UserLoyaltyLog,

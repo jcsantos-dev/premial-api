@@ -20,6 +20,11 @@ export class UserCustomerService {
     return this.repo.findOne({ where: { id } });
   }
 
+  async existsByUserId(userId: string): Promise<boolean> {
+    const count = await this.repo.count({ where: { user: { id: userId } } });
+    return count > 0;
+  }
+
   async create(dto: CreateUserCustomerDto) {
     const entity = this.repo.create(dto);
     return this.repo.save(entity);

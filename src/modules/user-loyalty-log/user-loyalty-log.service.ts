@@ -20,6 +20,14 @@ export class UserLoyaltyLogService {
     return this.repo.findOne({ where: { id } });
   }
 
+  // 🔹 Nuevo método para buscar por store
+  findByStore(storeId: string) {
+    return this.repo.find({
+      where: { storeId: storeId.toString() }, // convertir a número si tu storeId es bigint
+      relations: ['loyaltyActionType'], // Asegúrate de cargar la relación si es necesario
+    });
+  }
+
   async create(dto: CreateUserLoyaltyLogDto) {
     const entity = this.repo.create(dto);
     return this.repo.save(entity);

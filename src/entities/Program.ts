@@ -21,8 +21,8 @@ export class Program {
   @Column('bigint', { name: 'store_id' })
   storeId: string;
 
-  @Column('boolean', { name: 'is_activated', default: () => 'false' })
-  isActivated: boolean;
+  @Column('boolean', { name: 'is_active', default: () => 'false' })
+  isActive: boolean;
 
   @ManyToOne(() => ProgramType, (programType) => programType.programs)
   @JoinColumn([{ name: 'program_type_id', referencedColumnName: 'id' }])

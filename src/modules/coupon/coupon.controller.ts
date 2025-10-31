@@ -30,6 +30,11 @@ export class CouponController {
     return this.couponsService.findOne(id);
   }
 
+  @Get('store/:storeId')
+  findByStore(@Param('storeId') storeId: string) {
+    return this.couponsService.findByStore(storeId);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCouponDto: UpdateCouponDto) {
     return this.couponsService.update(id, updateCouponDto);

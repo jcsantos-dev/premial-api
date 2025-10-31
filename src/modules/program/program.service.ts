@@ -20,6 +20,13 @@ export class ProgramService {
     return this.repo.findOne({ where: { id } });
   }
 
+  findByStore(storeId: string) {
+    return this.repo.find({
+      where: { storeId: storeId.toString() }, // convertir a número si tu storeId es bigint
+      relations: ['programType'],
+    });
+  }
+
   async create(dto: CreateProgramDto) {
     const entity = this.repo.create(dto);
     return this.repo.save(entity);

@@ -20,6 +20,14 @@ export class UserService {
     return this.repo.findOne({ where: { id } });
   }
 
+  findByEmail(email: string) {
+    return this.repo.findOne({ where: { email } });
+  }
+
+  findByPhone(phone: string) {
+    return this.repo.findOne({ where: { phone } });
+  }
+
   async create(dto: CreateUserDto) {
     const entity = this.repo.create(dto);
     return this.repo.save(entity);
