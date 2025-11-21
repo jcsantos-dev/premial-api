@@ -9,40 +9,46 @@ import { Repository } from 'typeorm';
 export class UserAuthService {
   constructor(
     @InjectRepository(UserAuth)
-    private repo: Repository<UserAuth>,
+    private readonly userAuthRepository: Repository<UserAuth>,
   ) {}
 
   findAll() {
-    return this.repo.find({
+    return this.userAuthRepository.find({
       relations: ['user', 'authType'],
     });
   }
 
   findOne(id: string) {
-    return this.repo.findOne({ where: { id } });
+    return this.userAuthRepository.findOne({ where: { id } });
   }
 
   async create(dto: CreateUserAuthDto) {
-    const entity = this.repo.create(dto);
-    return this.repo.save(entity);
+    const entity = this.userAuthRepository.create(dto);
+    return this.userAuthRepository.save(entity);
   }
 
   async update(id: string, dto: UpdateUserAuthDto) {
-    const entity = await this.repo.preload({ id, ...dto });
+    const entity = await this.userAuthRepository.preload({ id, ...dto });
     if (!entity) throw new NotFoundException('UserAuth not found');
-    return this.repo.save(entity);
+    return this.userAuthRepository.save(entity);
   }
 
   async remove(id: string) {
-    const entity = await this.repo.findOne({ where: { id } });
+    const entity = await this.userAuthRepository.findOne({ where: { id } });
     if (!entity) throw new NotFoundException('UserAuth not found');
-    return this.repo.remove(entity);
+    return this.userAuthRepository.remove(entity);
   }
 
   async findByEmail(email: string) {
-    return this.repo.findOne({
+    return this.userAuthRepository.findOne({
       where: { authUserProviderId: email },
       relations: ['user'],
+    });
+  }
+
+  async findByUserId(userId: string) {
+    return this.userAuthRepository.findOne({
+      where: { user: { id: userId } },
     });
   }
 }

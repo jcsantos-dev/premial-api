@@ -37,24 +37,22 @@ export class AuthService {
       type: string;
     };
   }> {
-    const userAuth = await this.userAuthService.findByEmail(email);
-    if (!userAuth) {
+    // 1. Buscar usuario por email en la tabla User
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    if (!userAuth.passwordHash) {
+    // 2. Buscar auth usando el user.id encontrado
+    const userAuth = await this.userAuthService.findByUserId(user.id);
+    if (!userAuth || !userAuth.passwordHash) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // 👇 bcrypt.compare debe ser async y awaited
+    // 3. Verificar password
     const valid = await bcrypt.compare(password, userAuth.passwordHash);
     if (!valid) {
       throw new UnauthorizedException('Credenciales inválidas');
-    }
-
-    const user = await this.userService.findOne(userAuth.userId);
-    if (!user) {
-      throw new UnauthorizedException('Usuario no encontrado');
     }
 
     const isCustomer = await this.userCustomerService.existsByUserId(user.id);
