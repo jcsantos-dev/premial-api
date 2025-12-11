@@ -28,6 +28,10 @@ import { UserLoyaltyLogModule } from './modules/user-loyalty-log/user-loyalty-lo
 import { UserRolesModule } from './modules/user-roles/user-roles.module';
 import { UserStreakModule } from './modules/user-streak/user-streak.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { StoreProductModule } from './modules/store-product/store-product.module';
+import { TicketModule } from './modules/ticket/ticket.module';
+import { TicketItemModule } from './modules/ticket-item/ticket-item.module';
+import { ModuleTypeModule } from './modules/module_type/module_type.module';
 import databaseConfig from './db/config/database.config';
 
 @Module({
@@ -80,6 +84,10 @@ import databaseConfig from './db/config/database.config';
     UserRolesModule,
     UserStreakModule,
     AuthModule,
+    StoreProductModule,
+    TicketModule,
+    TicketItemModule,
+    ModuleTypeModule,
 
     /*TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

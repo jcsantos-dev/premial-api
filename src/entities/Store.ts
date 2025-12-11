@@ -13,6 +13,8 @@ import { UserLevel } from './UserLevel';
 import { UserLoyalty } from './UserLoyalty';
 import { UserLoyaltyLog } from './UserLoyaltyLog';
 import { UserStreak } from './UserStreak';
+import { StoreProduct } from './StoreProduct';
+import { Ticket } from './Ticket';
 
 @Index('store_pkey', ['id'], { unique: true })
 @Entity('store', { schema: 'public' })
@@ -37,6 +39,12 @@ export class Store {
 
   @OneToMany(() => Program, (program) => program.store)
   programs: Program[];
+
+  @OneToMany(() => StoreProduct, (storeProduct) => storeProduct.store)
+  storeProducts: StoreProduct[];
+
+  @OneToMany(() => Ticket, (ticket) => ticket.store)
+  storeTickets: Ticket[];
 
   @OneToMany(() => StreakConf, (streakConf) => streakConf.store)
   streakConfs: StreakConf[];

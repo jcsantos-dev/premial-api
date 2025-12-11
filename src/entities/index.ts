@@ -11,6 +11,7 @@ import { RewardType } from './RewardType';
 import { Store } from './Store';
 import { StreakConf } from './StreakConf';
 import { StreakType } from './StreakType';
+import { Ticket } from './Ticket';
 import { User } from './User';
 import { UserAuth } from './UserAuth';
 import { UserCustomer } from './UserCustomer';
@@ -21,6 +22,8 @@ import { UserPlatform } from './UserPlatform';
 import { UserRole } from './UserRole';
 import { UserStore } from './UserStore';
 import { UserStreak } from './UserStreak';
+import { TicketItem } from './TicketItem';
+import { StoreProduct } from './StoreProduct';
 
 export const entities = {
   AuthType,
@@ -46,6 +49,9 @@ export const entities = {
   UserRole,
   UserStore,
   UserStreak,
+  Ticket,
+  TicketItem,
+  StoreProduct,
 };
 
 export type EntityMap = typeof entities;

@@ -23,6 +23,8 @@ export class StoreService {
         'userLoyalties',
         'userLoyaltyLogs',
         'userStreaks',
+        'storeProducts',
+        'storeTickets',
       ],
     }); // devuelve todos los couponTypes
   }
@@ -39,6 +41,8 @@ export class StoreService {
         'userLoyalties',
         'userLoyaltyLogs',
         'userStreaks',
+        'storeProducts',
+        'storeTickets',
       ],
     });
   }
