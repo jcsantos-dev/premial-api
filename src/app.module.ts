@@ -32,6 +32,7 @@ import { StoreProductModule } from './modules/store-product/store-product.module
 import { TicketModule } from './modules/ticket/ticket.module';
 import { TicketItemModule } from './modules/ticket-item/ticket-item.module';
 import { ModuleTypeModule } from './modules/module_type/module_type.module';
+import { StoreModuleModule } from './modules/store_module/store_module.module';
 import databaseConfig from './db/config/database.config';
 
 @Module({
@@ -88,6 +89,7 @@ import databaseConfig from './db/config/database.config';
     TicketModule,
     TicketItemModule,
     ModuleTypeModule,
+    StoreModuleModule,
 
     /*TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

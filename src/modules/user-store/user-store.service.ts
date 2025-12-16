@@ -25,6 +25,13 @@ export class UserStoreService {
     return count > 0;
   }
 
+  async findByUserId(userId: string) {
+    return this.repo.findOne({
+      where: { userId },
+      relations: ['role', 'store'],
+    });
+  }
+
   // 🔹 Nuevo método para buscar por store
   findByStore(storeId: string) {
     return this.repo.find({

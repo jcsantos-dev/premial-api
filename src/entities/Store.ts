@@ -13,8 +13,10 @@ import { UserLevel } from './UserLevel';
 import { UserLoyalty } from './UserLoyalty';
 import { UserLoyaltyLog } from './UserLoyaltyLog';
 import { UserStreak } from './UserStreak';
+import { UserStore } from './UserStore';
 import { StoreProduct } from './StoreProduct';
 import { Ticket } from './Ticket';
+import { StoreModule } from './StoreModule';
 
 @Index('store_pkey', ['id'], { unique: true })
 @Entity('store', { schema: 'public' })
@@ -60,4 +62,10 @@ export class Store {
 
   @OneToMany(() => UserStreak, (userStreak) => userStreak.store)
   userStreaks: UserStreak[];
+
+  @OneToMany(() => StoreModule, (storeModule) => storeModule.store)
+  storeModules: StoreModule[];
+
+  @OneToMany(() => UserStore, (userStore: UserStore) => userStore.store)
+  userStores: UserStore[];
 }

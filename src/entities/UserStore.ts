@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { UserRole } from './UserRole';
 import { User } from './User';
+import { Store } from './Store';
 
 @Index('user_store_pkey', ['id'], { unique: true })
 @Index('user_store_store_id_index', ['storeId'], {})
@@ -30,4 +31,8 @@ export class UserStore {
   @ManyToOne(() => User, (user) => user.userStores)
   @JoinColumn([{ name: 'user_id', referencedColumnName: 'id' }])
   user: User;
+
+  @ManyToOne(() => Store, (store) => store.userStores)
+  @JoinColumn([{ name: 'store_id', referencedColumnName: 'id' }])
+  store: Store;
 }

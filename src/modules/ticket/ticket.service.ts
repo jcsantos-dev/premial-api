@@ -54,7 +54,7 @@ export class TicketService {
     return this.ticketRepo.findOne({ where: { id }, relations: ['store'] });
   }
 
-  findByStore(storeId: number) {
+  findByStore(storeId: string) {
     return this.ticketRepo.find({
       where: { storeId: String(storeId) },
       relations: ['store'],

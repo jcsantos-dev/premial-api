@@ -12,7 +12,11 @@ import { UserStoreService } from '../user-store/user-store.service';
 interface JwtPayload {
   sub: string;
   email: string;
-  type: 'customer' | 'store_user' | 'unknown';
+  type: 'customer' | 'store' | 'platform';
+  storeId?: string;
+  storeName?: string;
+  roleId?: string;
+  userStoreId?: string;
 }
 
 @Injectable()
@@ -35,6 +39,10 @@ export class AuthService {
       name: string;
       email: string;
       type: string;
+      storeId?: string;
+      storeName?: string;
+      roleId?: string;
+      userStoreId?: string;
     };
   }> {
     // 1. Buscar usuario por email en la tabla User
@@ -56,18 +64,35 @@ export class AuthService {
     }
 
     const isCustomer = await this.userCustomerService.existsByUserId(user.id);
-    const isStoreUser = await this.userStoreService.existsByUserId(user.id);
+    const userStore = await this.userStoreService.findByUserId(user.id);
 
-    const type: JwtPayload['type'] = isCustomer
-      ? 'customer'
-      : isStoreUser
-        ? 'store_user'
-        : 'unknown';
+    let type: JwtPayload['type'] = 'customer';
+    let storeId: string | undefined;
+    let storeName: string | undefined;
+    let roleId: string | undefined;
+    let userStoreId: string | undefined;
+
+    if (userStore) {
+      type = 'store';
+      storeId = userStore.storeId;
+      storeName = (userStore as any).store?.name;
+      roleId = userStore.role?.id;
+      userStoreId = userStore.id;
+    } else if (isCustomer) {
+      type = 'customer';
+    } else {
+      // Platform user - puedes agregar lógica aquí si es necesario
+      type = 'platform';
+    }
 
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       type,
+      storeId,
+      storeName,
+      roleId,
+      userStoreId,
     };
 
     const token = this.jwtService.sign(payload);
@@ -79,6 +104,10 @@ export class AuthService {
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
         type,
+        storeId,
+        storeName,
+        roleId,
+        userStoreId,
       },
     };
   }

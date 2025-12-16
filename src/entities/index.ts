@@ -24,6 +24,8 @@ import { UserStore } from './UserStore';
 import { UserStreak } from './UserStreak';
 import { TicketItem } from './TicketItem';
 import { StoreProduct } from './StoreProduct';
+import { ModuleType } from './ModuleType';
+import { StoreModule } from './StoreModule';
 
 export const entities = {
   AuthType,
@@ -52,6 +54,8 @@ export const entities = {
   Ticket,
   TicketItem,
   StoreProduct,
+  ModuleType,
+  StoreModule,
 };
 
 export type EntityMap = typeof entities;

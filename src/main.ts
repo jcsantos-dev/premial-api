@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { JsonApiInterceptor } from './interceptors/TransformInterceptor';
 import { ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,6 +11,7 @@ async function bootstrap() {
   // 🔹 Prefijo global para todos los endpoints
   app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new JsonApiInterceptor());
+  app.use(cookieParser());
 
   // 👇 agrega esta línea para activar validaciones globales
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
