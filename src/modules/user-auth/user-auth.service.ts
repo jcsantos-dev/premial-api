@@ -10,7 +10,7 @@ export class UserAuthService {
   constructor(
     @InjectRepository(UserAuth)
     private readonly userAuthRepository: Repository<UserAuth>,
-  ) {}
+  ) { }
 
   findAll() {
     return this.userAuthRepository.find({
@@ -23,7 +23,13 @@ export class UserAuthService {
   }
 
   async create(dto: CreateUserAuthDto) {
-    const entity = this.userAuthRepository.create(dto);
+    const entity = this.userAuthRepository.create({
+      userId: dto.userId,
+      authTypeId: dto.authTypeId,
+      authUserProviderId: dto.authUserProviderId,
+      createdAt: new Date(),
+    });
+
     return this.userAuthRepository.save(entity);
   }
 
