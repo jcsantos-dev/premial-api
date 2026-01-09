@@ -23,14 +23,32 @@ export class UserAuthService {
   }
 
   async create(dto: CreateUserAuthDto) {
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Vercel - DTO recibido:', JSON.stringify(dto));
+    }
+
     const entity = this.userAuthRepository.create({
       userId: dto.userId,
       authTypeId: dto.authTypeId,
       authUserProviderId: dto.authUserProviderId,
+      passwordHash: dto.passwordHash || null,
       createdAt: new Date(),
     });
 
-    return this.userAuthRepository.save(entity);
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Vercel - Entidad a guardar:', JSON.stringify(entity));
+    }
+
+    try {
+      return await this.userAuthRepository.save(entity);
+    } catch (error) {
+      console.error('Vercel - Error detallado:', {
+        message: error.message,
+        query: error.query,
+        parameters: error.parameters,
+      });
+      throw error;
+    }
   }
 
   async update(id: string, dto: UpdateUserAuthDto) {
