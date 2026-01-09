@@ -39,11 +39,11 @@ export class UserAuth {
   @Column('timestamp without time zone', { name: 'created_at' })
   createdAt: Date;
 
-  @ManyToOne(() => AuthType, (authType) => authType.userAuths)
+  @ManyToOne(() => AuthType, (authType) => authType.userAuths, { nullable: false })
   @JoinColumn([{ name: 'auth_type_id', referencedColumnName: 'id' }])
   authType: AuthType;
 
-  @ManyToOne(() => User, (user) => user.userAuths)
+  @ManyToOne(() => User, (user) => user.userAuths, { nullable: false })
   @JoinColumn([{ name: 'user_id', referencedColumnName: 'id' }])
   user: User;
 }
