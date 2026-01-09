@@ -23,29 +23,50 @@ export class UserAuthService {
   }
 
   async create(dto: CreateUserAuthDto) {
-    if (process.env.NODE_ENV === 'production') {
-      console.log('Vercel - DTO recibido:', JSON.stringify(dto));
-    }
-
-    const entity = this.userAuthRepository.create({
+    console.log('=== SERVICE CREATE START ===');
+    console.log('DTO recibido en service:', {
       userId: dto.userId,
       authTypeId: dto.authTypeId,
       authUserProviderId: dto.authUserProviderId,
-      passwordHash: dto.passwordHash || null,
-      createdAt: new Date(),
+      types: {
+        userId: typeof dto.userId,
+        authTypeId: typeof dto.authTypeId,
+        authUserProviderId: typeof dto.authUserProviderId,
+      }
     });
 
-    if (process.env.NODE_ENV === 'production') {
-      console.log('Vercel - Entidad a guardar:', JSON.stringify(entity));
+    // VALIDACIÓN DEFENSIVA - no confíes en que el controller ya validó
+    if (dto.userId === undefined || dto.userId === null) {
+      throw new Error('CRITICAL: userId is undefined in service layer');
+    }
+    if (dto.authTypeId === undefined || dto.authTypeId === null) {
+      throw new Error('CRITICAL: authTypeId is undefined in service layer');
+    }
+    if (dto.authUserProviderId === undefined || dto.authUserProviderId === null) {
+      throw new Error('CRITICAL: authUserProviderId is undefined in service layer');
     }
 
+    // CREACIÓN MANUAL - NO usar this.userAuthRepository.create()
+    const userAuth = new UserAuth();
+    userAuth.userId = String(dto.userId); // Convertir explícitamente
+    userAuth.authTypeId = Number(dto.authTypeId); // Convertir explícitamente
+    userAuth.authUserProviderId = String(dto.authUserProviderId);
+    userAuth.passwordHash = dto.passwordHash || null;
+    userAuth.createdAt = new Date();
+
+    console.log('Entidad creada manualmente:', userAuth);
+
     try {
-      return await this.userAuthRepository.save(entity);
+      const result = await this.userAuthRepository.save(userAuth);
+      console.log('Resultado guardado:', result);
+      return result;
     } catch (error) {
-      console.error('Vercel - Error detallado:', {
+      console.error('Error completo:', {
         message: error.message,
+        stack: error.stack,
         query: error.query,
         parameters: error.parameters,
+        driverError: error.driverError,
       });
       throw error;
     }

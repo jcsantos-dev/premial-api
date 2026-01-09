@@ -2,11 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { JsonApiInterceptor } from './interceptors/TransformInterceptor';
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'debug', 'log'],
+  });
 
   // 🔹 Prefijo global para todos los endpoints
   app.setGlobalPrefix('api');
@@ -14,7 +17,20 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // 👇 agrega esta línea para activar validaciones globales
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  // ValidationPipe global
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true, // Remueve propiedades no definidas en el DTO
+    forbidNonWhitelisted: true, // Lanza error si hay propiedades no definidas
+    transform: true, // Transforma tipos automáticamente
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
+    disableErrorMessages: false, // Mantener mensajes de error para debug
+    exceptionFactory: (errors) => {
+      logger.error('Validation errors:', errors);
+      return new BadRequestException(errors);
+    },
+  }));
 
   // 🔹 Configuración de Swagger
   const config = new DocumentBuilder()
