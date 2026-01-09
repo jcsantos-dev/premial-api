@@ -11,7 +11,7 @@ import { User } from './User';
 
 //@Index('idx_user_auth_email', ['email'], {})
 @Index('user_auth_pkey', ['id'], { unique: true })
-@Index('user_auth_user_id_index', ['userId'], {})
+//@Index('user_auth_user_id_index', ['userId'], {})
 @Entity('user_auth', { schema: 'public' })
 export class UserAuth {
   @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })
