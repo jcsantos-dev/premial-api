@@ -30,7 +30,10 @@ async function bootstrap() {
 
   // Permitir solicitudes desde localhost:4200
   app.enableCors({
-    origin: 'http://localhost:4200',
+    origin: [
+      'http://localhost:4200',
+      'https://premial-bussiness-web.vercel.app',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
