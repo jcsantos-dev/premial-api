@@ -48,11 +48,12 @@ import databaseConfig from './db/config/database.config';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        host: config.get<string>('database.host'),
+        url: config.get<string>('database.url'),
+        /*host: config.get<string>('database.host'),
         port: config.get<number>('database.port'),
         username: config.get<string>('database.user'),
         password: config.get<string>('database.pass'),
-        database: config.get<string>('database.name'),
+        database: config.get<string>('database.name'),*/ //-- importante si se usa url en vez de partes individuales
         entities: [
           __dirname + '/entities/*.ts', // ProgramType.ts, Coupon.ts, Program.ts
         ],
