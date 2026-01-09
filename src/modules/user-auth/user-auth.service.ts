@@ -4,6 +4,7 @@ import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserAuth } from 'src/entities/UserAuth';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserAuthService {
@@ -46,12 +47,20 @@ export class UserAuthService {
       throw new Error('CRITICAL: authUserProviderId is undefined in service layer');
     }
 
+    // Encriptar el password si está presente
+    let hashedPassword: string | null = null;
+    if (dto.passwordHash) {
+      const saltRounds = 10; // Número de rondas de sal
+      hashedPassword = await bcrypt.hash(dto.passwordHash, saltRounds);
+      console.log('Password encriptado correctamente');
+    }
+
     // CREACIÓN MANUAL - NO usar this.userAuthRepository.create()
     const userAuth = new UserAuth();
     userAuth.userId = String(dto.userId); // Convertir explícitamente
     userAuth.authTypeId = Number(dto.authTypeId); // Convertir explícitamente
     userAuth.authUserProviderId = String(dto.authUserProviderId);
-    userAuth.passwordHash = dto.passwordHash || null;
+    userAuth.passwordHash = hashedPassword || null;
     userAuth.createdAt = new Date();
 
     console.log('Entidad creada manualmente:', userAuth);
