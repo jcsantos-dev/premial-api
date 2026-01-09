@@ -17,11 +17,11 @@ export class UserAuth {
   @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })
   id: string;
 
-  @Column('bigint', { name: 'user_id' })
+  /*@Column('bigint', { name: 'user_id' })
   userId: string;
 
   @Column('bigint', { name: 'auth_type_id' })
-  authTypeId: number;
+  authTypeId: number;*/
 
   @Column('character varying', { name: 'auth_user_provider_id', length: 255 })
   authUserProviderId: string;
