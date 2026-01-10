@@ -40,11 +40,11 @@ export class Coupon {
   @Column('bigint', { name: 'store_id' })
   storeId: string;
 
-  @Column('bigint', { name: 'required_quantity' })
-  requiredQuantity: string;
+  @Column('bigint', { name: 'required_quantity', nullable: true })
+  requiredQuantity: string | null;
 
-  @Column('numeric', { name: 'required_amount', precision: 8, scale: 2 })
-  requiredAmount: string;
+  @Column('numeric', { name: 'required_amount', precision: 8, scale: 2, nullable: true })
+  requiredAmount: string | null;
 
   @Column('timestamp without time zone', { name: 'valid_from', nullable: true })
   validFrom: Date | null;
