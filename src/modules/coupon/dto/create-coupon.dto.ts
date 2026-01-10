@@ -24,31 +24,31 @@ export class CreateCouponDto {
     @IsOptional()
     validTo: string;
 
-    @IsNumber()
+    @IsString()
     @IsOptional()
-    requiredQuantity: number;
+    requiredQuantity: string;
 
-    @IsNumber()
+    @IsString()
     @IsOptional()
-    requiredAmount: number;
+    requiredAmount: string;
 
     @IsBoolean()
     @IsNotEmpty()
     isActive: boolean;
 
-    @IsNumber()
+    @IsString()
     @IsNotEmpty()
-    rewardTypeId: number;
+    rewardTypeId: string;
 
-    @IsNumber()
+    @IsString()
     @IsNotEmpty()
-    programTypeId: number;
+    programTypeId: string;
 
-    @IsNumber()
+    @IsString()
     @IsNotEmpty()
-    couponTypeId: number;
+    couponTypeId: string;
 
-    @IsNumber()
+    @IsString()
     @IsNotEmpty()
-    storeId: number;
+    storeId: string;
 }
