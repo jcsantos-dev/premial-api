@@ -27,7 +27,7 @@ export class AuthController {
     // Configurar cookie con el token JWT
     res.cookie('access_token', result.access_token, {
       httpOnly: true,
-      httpOnly: true,
+      //httpOnly: true,
       secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development', // Necesario para 'SameSite=None'
       sameSite: 'none', // Permite envío cross-site (Localhost -> Vercel)
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
