@@ -13,7 +13,7 @@ import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -27,8 +27,9 @@ export class AuthController {
     // Configurar cookie con el token JWT
     res.cookie('access_token', result.access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development', // Necesario para 'SameSite=None'
+      sameSite: 'none', // Permite envío cross-site (Localhost -> Vercel)
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
     });
 
