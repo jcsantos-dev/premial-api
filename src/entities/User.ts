@@ -12,6 +12,7 @@ import { UserLoyaltyLog } from './UserLoyaltyLog';
 import { UserPlatform } from './UserPlatform';
 import { UserStore } from './UserStore';
 import { UserStreak } from './UserStreak';
+import { UserLoyalty } from './UserLoyalty';
 
 @Index('user_pkey', ['id'], { unique: true })
 @Entity('user', { schema: 'public' })
@@ -46,8 +47,8 @@ export class User {
   @OneToMany(() => UserLevel, (userLevel) => userLevel.user)
   userLevels: UserLevel[];
 
-  /*@OneToMany(() => UserLoyalty, (userLoyalty) => userLoyalty.user)
-  userLoyalties: UserLoyalty[];*/
+  @OneToMany(() => UserLoyalty, (userLoyalty) => userLoyalty.user)
+  userLoyalties: UserLoyalty[];
 
   @OneToMany(
     () => UserLoyaltyLog,
