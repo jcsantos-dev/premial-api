@@ -58,7 +58,7 @@ import databaseConfig from './db/config/database.config';
           __dirname + '/entities/*.ts', // ProgramType.ts, Coupon.ts, Program.ts
         ],
         autoLoadEntities: true,
-        //synchronize: config.get<string>('NODE_ENV') === 'development',
+        synchronize: false,
         //logging: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),

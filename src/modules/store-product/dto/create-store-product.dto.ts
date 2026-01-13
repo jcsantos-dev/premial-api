@@ -24,6 +24,10 @@ export class CreateStoreProductDto {
   @IsPositive()
   price: number;
 
+  @IsNumber()
+  @IsOptional()
+  set_points?: number;
+
   @IsBoolean()
   is_active: boolean;
 }

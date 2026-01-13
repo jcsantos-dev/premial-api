@@ -32,6 +32,9 @@ export class StoreProduct {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, name: 'set_points' })
+  set_points: number;
+
   @Column({ default: true })
   is_active: boolean;
 

@@ -19,9 +19,6 @@ export class Ticket {
   @Column('bigint', { name: 'store_id' })
   storeId: string;
 
-  @Column({ type: 'uuid', unique: true })
-  ticket_uuid: string;
-
   @Column({ type: 'bigint', name: 'qr_scanned_by_user_id', nullable: true })
   qr_scanned_by_user_id?: string | null;
 
