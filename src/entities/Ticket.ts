@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Store } from '../entities/Store';
 import { TicketItem } from '../entities/TicketItem';
+import { UserCustomer } from './UserCustomer';
 
 @Entity('ticket')
 export class Ticket {
@@ -20,6 +21,13 @@ export class Ticket {
 
   @Column({ type: 'uuid', unique: true })
   ticket_uuid: string;
+
+  @Column({ type: 'bigint', name: 'qr_scanned_by_user_id', nullable: true })
+  qr_scanned_by_user_id?: string | null;
+
+  @ManyToOne(() => UserCustomer)
+  @JoinColumn({ name: 'qr_scanned_by_user_id' })
+  qrScannedByUser: UserCustomer;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_amount: number;

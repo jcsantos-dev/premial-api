@@ -13,15 +13,15 @@ export class TicketService {
     private ticketRepo: Repository<Ticket>,
     @InjectRepository(TicketItem)
     private ticketItemRepo: Repository<TicketItem>,
-  ) {}
+  ) { }
 
   async create(createTicketDto: CreateTicketDto) {
-    // Crear el ticket (el UUID se genera automáticamente en la DB)
     const ticket = this.ticketRepo.create({
       storeId: createTicketDto.storeId,
       total_amount: createTicketDto.total_amount,
       status: 'pending',
       points_assigned: 0,
+      qr_scanned_by_user_id: createTicketDto.qr_scanned_by_user_id,
     });
 
     const savedTicket = await this.ticketRepo.save(ticket);

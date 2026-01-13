@@ -3,7 +3,7 @@ import { CreateUserLoyaltyDto } from './dto/create-user-loyalty.dto';
 import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserLoyalty } from 'src/entities/UserLoyalty';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { User } from 'src/entities/User';
 import { UserCustomer } from 'src/entities/UserCustomer';
 import { UserRole } from 'src/entities/UserRole';
@@ -205,5 +205,31 @@ export class UserLoyaltyService {
     const entity = await this.repo.findOne({ where: { id } });
     if (!entity) throw new NotFoundException('UserLoyalty not found');
     return this.repo.remove(entity);
+  }
+
+  async search(storeId: string, query: string) {
+    // Buscar en UserLoyalty filtrando por tienda y uniendo con User y UserCustomer
+    return this.repo.find({
+      where: [
+        {
+          storeId,
+          user: { userCustomers: { phone: ILike(`%${query}%`) } }
+        },
+        {
+          storeId,
+          user: { phone: ILike(`%${query}%`) }
+        },
+        {
+          storeId,
+          user: { firstName: ILike(`%${query}%`) }
+        },
+        {
+          storeId,
+          user: { lastName: ILike(`%${query}%`) }
+        }
+      ],
+      relations: ['user', 'user.userCustomers'],
+      take: 20,
+    });
   }
 }

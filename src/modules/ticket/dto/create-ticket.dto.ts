@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsArray, ValidateNested, IsNotEmpty } from 'class-validator';
+import { IsNumber, IsString, IsArray, ValidateNested, IsNotEmpty, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateTicketItemDto {
@@ -27,6 +27,10 @@ export class CreateTicketDto {
   @IsString()
   @IsNotEmpty()
   storeId: string;
+
+  @IsString()
+  @IsOptional()
+  qr_scanned_by_user_id?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

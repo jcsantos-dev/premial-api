@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { UserLoyaltyService } from './user-loyalty.service';
 import { CreateUserLoyaltyDto } from './dto/create-user-loyalty.dto';
@@ -13,7 +14,7 @@ import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
 
 @Controller('user-loyalty')
 export class UserLoyaltyController {
-  constructor(private readonly userLoyaltyService: UserLoyaltyService) {}
+  constructor(private readonly userLoyaltyService: UserLoyaltyService) { }
 
   @Post()
   create(@Body() createUserLoyaltyDto: CreateUserLoyaltyDto) {
@@ -46,5 +47,10 @@ export class UserLoyaltyController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userLoyaltyService.remove(id);
+  }
+
+  @Get('search/:storeId')
+  search(@Param('storeId') storeId: string, @Query('q') q: string) {
+    return this.userLoyaltyService.search(storeId, q);
   }
 }
