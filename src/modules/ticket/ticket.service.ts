@@ -73,7 +73,11 @@ export class TicketService {
       }
 
       loyalty.points = (Number(loyalty.points) || 0) + totalPoints;
-      loyalty.visits = (Number(loyalty.visits) || 0) + 1;
+
+      if (createTicketDto.isVisit) {
+        loyalty.visits = (Number(loyalty.visits) || 0) + 1;
+      }
+
       await this.userLoyaltyRepo.save(loyalty);
     }
 

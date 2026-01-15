@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsArray, ValidateNested, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNumber, IsString, IsArray, ValidateNested, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateTicketItemDto {
@@ -36,4 +36,8 @@ export class CreateTicketDto {
   @ValidateNested({ each: true })
   @Type(() => CreateTicketItemDto)
   items: CreateTicketItemDto[];
+
+  @IsBoolean()
+  @IsOptional()
+  isVisit?: boolean;
 }

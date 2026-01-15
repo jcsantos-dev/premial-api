@@ -73,6 +73,7 @@ export class UserLoyaltyService {
       // 1.1 Crear Usuario Base
       user = this.userRepo.create({
         email,
+        phone,
         firstName,
         lastName,
         uuid: crypto.randomUUID(),
@@ -180,6 +181,7 @@ export class UserLoyaltyService {
 
     if (user) {
       if (email) user.email = email;
+      if (phone) user.phone = phone;
       if (firstName) user.firstName = firstName;
       if (lastName) user.lastName = lastName;
       await this.userRepo.save(user);
