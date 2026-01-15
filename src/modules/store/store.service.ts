@@ -28,7 +28,7 @@ export class StoreService {
     private storeProductRepo: Repository<StoreProduct>,
     @InjectRepository(Ticket)
     private ticketRepo: Repository<Ticket>,
-  ) {}
+  ) { }
 
   findAll() {
     return this.repo.find({

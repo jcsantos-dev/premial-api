@@ -6,6 +6,9 @@ import { Ticket } from 'src/entities/Ticket';
 import { TicketItem } from 'src/entities/TicketItem';
 import { UserLoyalty } from 'src/entities/UserLoyalty';
 import { StoreProduct } from 'src/entities/StoreProduct';
+import { UserLoyaltyLog } from 'src/entities/UserLoyaltyLog';
+import { UserCustomer } from 'src/entities/UserCustomer';
+import { LoyaltyActionType } from 'src/entities/LoyaltyActionType';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -19,6 +22,12 @@ export class TicketService {
     private userLoyaltyRepo: Repository<UserLoyalty>,
     @InjectRepository(StoreProduct)
     private productRepo: Repository<StoreProduct>,
+    @InjectRepository(UserLoyaltyLog)
+    private userLoyaltyLogRepo: Repository<UserLoyaltyLog>,
+    @InjectRepository(UserCustomer)
+    private userCustomerRepo: Repository<UserCustomer>,
+    @InjectRepository(LoyaltyActionType)
+    private loyaltyActionTypeRepo: Repository<LoyaltyActionType>,
   ) { }
 
   async create(createTicketDto: CreateTicketDto) {
@@ -79,6 +88,34 @@ export class TicketService {
       }
 
       await this.userLoyaltyRepo.save(loyalty);
+
+      // 5. Crear Log de Actividad (UserLoyaltyLog)
+      // Primero obtener el usuario global (User)
+      const userCustomer = await this.userCustomerRepo.findOne({
+        where: { id: createTicketDto.qr_scanned_by_user_id },
+        relations: ['user']
+      });
+
+      if (userCustomer && userCustomer.user) {
+        // Buscar tipo 'compra' o 'purchase'
+        let actionType = await this.loyaltyActionTypeRepo.findOne({ where: { name: 'compra' } });
+        if (!actionType) actionType = await this.loyaltyActionTypeRepo.findOne({ where: { name: 'purchase' } });
+        // Fallback: si no existe, usar el ID 1 o crear uno (por ahora asumimos que existe o null es aceptable si es opcional, pero es requerido)
+        // Usaremos un ID conocido si falla: '1' suele ser compra.
+        const actionTypeId = actionType ? actionType.id : '1';
+
+        const log = this.userLoyaltyLogRepo.create({
+          userId: userCustomer.user.id,
+          storeId: createTicketDto.storeId,
+          loyaltyActionTypeId: actionTypeId,
+          pointsDelta: totalPoints,
+          visitsDelta: createTicketDto.isVisit ? 1 : 0,
+          note: `Compra ticket #${savedTicket.id} - Total: $${createTicketDto.total_amount}`,
+          createdAt: new Date(),
+        });
+
+        await this.userLoyaltyLogRepo.save(log);
+      }
     }
 
     return this.ticketRepo.findOne({
