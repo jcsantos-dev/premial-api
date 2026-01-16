@@ -33,6 +33,12 @@ export class Store {
   @Column('uuid', { name: 'uuid' })
   uuid: string;
 
+  @Column('character varying', { name: 'logo_url', nullable: true, length: 500 })
+  logo_url: string | null;
+
+  @Column('character varying', { name: 'square_logo_url', nullable: true, length: 500 })
+  square_logo_url: string | null;
+
   @OneToMany(() => Coupon, (coupon) => coupon.store)
   coupons: Coupon[];
 
