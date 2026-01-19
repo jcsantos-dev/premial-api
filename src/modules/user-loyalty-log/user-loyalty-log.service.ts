@@ -10,7 +10,7 @@ export class UserLoyaltyLogService {
   constructor(
     @InjectRepository(UserLoyaltyLog)
     private repo: Repository<UserLoyaltyLog>,
-  ) {}
+  ) { }
 
   findAll() {
     return this.repo.find();
@@ -23,8 +23,21 @@ export class UserLoyaltyLogService {
   // 🔹 Nuevo método para buscar por store
   findByStore(storeId: string) {
     return this.repo.find({
-      where: { storeId: storeId.toString() }, // convertir a número si tu storeId es bigint
-      relations: ['loyaltyActionType'], // Asegúrate de cargar la relación si es necesario
+      where: { storeId: storeId.toString() },
+      relations: ['loyaltyActionType'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  // 🔹 Nuevo método para buscar por usuario y store (Personal de Customer)
+  findByUserAndStore(userId: string, storeId: string) {
+    return this.repo.find({
+      where: {
+        userId: userId,
+        storeId: storeId,
+      },
+      relations: ['loyaltyActionType'],
+      order: { createdAt: 'DESC' },
     });
   }
 

@@ -49,7 +49,8 @@ async function bootstrap() {
     origin: [
       'http://localhost:4200',
       'https://premial-bussiness-web.vercel.app',
-      'http://localhost:4300'
+      'http://localhost:4300',
+      'https://premial-customers-web.vercel.app'
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,

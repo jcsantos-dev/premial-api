@@ -14,6 +14,7 @@ import { UserRole } from 'src/entities/UserRole';
 import { UserPlatform } from 'src/entities/UserPlatform';
 import { UserAuth } from 'src/entities/UserAuth';
 import { AuthType } from 'src/entities/AuthType';
+import { Coupon } from 'src/entities/Coupon';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 
@@ -34,6 +35,8 @@ export class UserLoyaltyService {
     private userAuthRepo: Repository<UserAuth>,
     @InjectRepository(AuthType)
     private authTypeRepo: Repository<AuthType>,
+    @InjectRepository(Coupon)
+    private couponRepo: Repository<Coupon>,
   ) { }
 
   findAll() {
@@ -279,13 +282,13 @@ export class UserLoyaltyService {
       ],
     });
 
-    // Retornar un array simplificado con solo info de tiendas
+    // Retornar un array con info de tiendas enriquecida
     return userLoyalties.map((loyalty) => ({
       id: loyalty.id,
       storeId: loyalty.storeId,
-      storeName: loyalty.store?.name || 'Unknown Store',
       points: loyalty.points,
       visits: loyalty.visits,
+      store: loyalty.store,
     }));
   }
 
@@ -304,6 +307,21 @@ export class UserLoyaltyService {
     }
 
     return userLoyalty;
+  }
+
+  async getFullDashboardData(userId: string, storeId: string) {
+    const userLoyalty = await this.getUserLoyaltyByUserAndStore(
+      userId,
+      storeId,
+    );
+    const coupons = await this.couponRepo.find({
+      where: { storeId, isActive: true },
+    });
+
+    return {
+      userLoyalty,
+      coupons,
+    };
   }
 
   async verifyPhone(phone: string, storeId: string) {

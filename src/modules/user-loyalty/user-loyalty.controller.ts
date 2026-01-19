@@ -33,6 +33,13 @@ export class UserLoyaltyController {
     return this.userLoyaltyService.getUserLoyaltyByUserAndStore(userId, storeId);
   }
 
+  @Get('by-store/:storeId/full')
+  @UseGuards(JwtAuthGuard)
+  getFullDashboard(@Request() req: any, @Param('storeId') storeId: string) {
+    const userId = req.user.sub;
+    return this.userLoyaltyService.getFullDashboardData(userId, storeId);
+  }
+
   @Get('search')
   search(
     @Query('query') query: string,
