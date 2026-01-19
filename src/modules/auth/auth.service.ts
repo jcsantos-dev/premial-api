@@ -27,7 +27,7 @@ export class AuthService {
     private readonly userCustomerService: UserCustomerService,
     private readonly userStoreService: UserStoreService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async login(
     email: string,
@@ -38,6 +38,9 @@ export class AuthService {
       id: string;
       name: string;
       email: string;
+      phone?: string;
+      firstName?: string;
+      lastName?: string;
       type: string;
       storeId?: string;
       storeName?: string;
@@ -101,8 +104,11 @@ export class AuthService {
       access_token: token,
       user: {
         id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
+        name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
         email: user.email,
+        phone: user.phone,
+        firstName: user.firstName,
+        lastName: user.lastName,
         type,
         storeId,
         storeName,

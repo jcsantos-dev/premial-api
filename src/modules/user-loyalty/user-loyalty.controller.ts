@@ -7,7 +7,10 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UserLoyaltyService } from './user-loyalty.service';
 import { CreateUserLoyaltyDto } from './dto/create-user-loyalty.dto';
 import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
@@ -15,6 +18,33 @@ import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
 @Controller('user-loyalty')
 export class UserLoyaltyController {
   constructor(private readonly userLoyaltyService: UserLoyaltyService) { }
+
+  @Get('stores-by-userid')
+  @UseGuards(JwtAuthGuard)
+  getStoresByUserId(@Request() req: any) {
+    const userId = req.user.sub;
+    return this.userLoyaltyService.getStoresByUserId(userId);
+  }
+
+  @Get('by-store/:storeId')
+  @UseGuards(JwtAuthGuard)
+  getUserLoyaltyByStore(@Request() req: any, @Param('storeId') storeId: string) {
+    const userId = req.user.sub;
+    return this.userLoyaltyService.getUserLoyaltyByUserAndStore(userId, storeId);
+  }
+
+  @Get('search')
+  search(
+    @Query('query') query: string,
+    @Query('storeId') storeId?: string,
+  ) {
+    return this.userLoyaltyService.search(storeId, query);
+  }
+
+  @Get('store/:storeId')
+  findByStore(@Param('storeId') storeId: string) {
+    return this.userLoyaltyService.findByStore(storeId);
+  }
 
   @Post()
   create(@Body() createUserLoyaltyDto: CreateUserLoyaltyDto) {
@@ -31,11 +61,6 @@ export class UserLoyaltyController {
     return this.userLoyaltyService.findOne(id);
   }
 
-  @Get('store/:storeId')
-  findByStore(@Param('storeId') storeId: string) {
-    return this.userLoyaltyService.findByStore(storeId);
-  }
-
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -47,10 +72,5 @@ export class UserLoyaltyController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userLoyaltyService.remove(id);
-  }
-
-  @Get('search/:storeId')
-  search(@Param('storeId') storeId: string, @Query('q') q: string) {
-    return this.userLoyaltyService.search(storeId, q);
   }
 }

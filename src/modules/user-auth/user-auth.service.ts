@@ -82,6 +82,12 @@ export class UserAuthService {
   }
 
   async update(id: string, dto: UpdateUserAuthDto) {
+    // Si viene passwordHash (que es la contraseña en crudo), la encriptamos
+    if (dto.passwordHash) {
+      const saltRounds = 10;
+      dto.passwordHash = await bcrypt.hash(dto.passwordHash, saltRounds);
+    }
+
     const entity = await this.userAuthRepository.preload({ id, ...dto });
     if (!entity) throw new NotFoundException('UserAuth not found');
     return this.userAuthRepository.save(entity);

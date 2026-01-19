@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateUserLoyaltyDto } from './dto/create-user-loyalty.dto';
 import { UpdateUserLoyaltyDto } from './dto/update-user-loyalty.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -30,7 +34,7 @@ export class UserLoyaltyService {
     private userAuthRepo: Repository<UserAuth>,
     @InjectRepository(AuthType)
     private authTypeRepo: Repository<AuthType>,
-  ) { }
+  ) {}
 
   findAll() {
     return this.repo.find({
@@ -53,7 +57,8 @@ export class UserLoyaltyService {
   }
 
   async create(dto: CreateUserLoyaltyDto) {
-    const { email, firstName, lastName, phone, birthdate, password, storeId } = dto;
+    const { email, firstName, lastName, phone, birthdate, password, storeId } =
+      dto;
 
     // 1. Buscar si ya existe el usuario globalmente
     // Primero por teléfono via UserCustomer
@@ -83,8 +88,11 @@ export class UserLoyaltyService {
 
       // 1.2 Crear Credenciales (UserAuth) si viene password
       if (password) {
-        let authType = await this.authTypeRepo.findOne({ where: { name: 'local' } });
-        if (!authType) authType = await this.authTypeRepo.findOne({ where: { id: '1' } });
+        let authType = await this.authTypeRepo.findOne({
+          where: { name: 'local' },
+        });
+        if (!authType)
+          authType = await this.authTypeRepo.findOne({ where: { id: '1' } });
 
         if (authType) {
           const hashedPassword = await bcrypt.hash(password, 10);
@@ -108,8 +116,11 @@ export class UserLoyaltyService {
       userCustomer = await this.userCustomerRepo.save(userCustomer);
 
       // 1.4 Rol de Plataforma (UserPlatform)
-      let role = await this.roleRepo.findOne({ where: { name: 'user_customer' } });
-      if (!role) role = await this.roleRepo.findOne({ where: { name: 'customer' } });
+      let role = await this.roleRepo.findOne({
+        where: { name: 'user_customer' },
+      });
+      if (!role)
+        role = await this.roleRepo.findOne({ where: { name: 'customer' } });
 
       if (role) {
         const userPlatform = this.userPlatformRepo.create({
@@ -122,7 +133,7 @@ export class UserLoyaltyService {
       // Si el usuario existe, asegurarnos de que tenga un perfil UserCustomer
       if (!userCustomer) {
         userCustomer = await this.userCustomerRepo.findOne({
-          where: { user: { id: user.id } }
+          where: { user: { id: user.id } },
         });
 
         if (!userCustomer) {
@@ -150,7 +161,9 @@ export class UserLoyaltyService {
     });
 
     if (userLoyalty) {
-      throw new BadRequestException('El cliente ya está registrado en esta tienda');
+      throw new BadRequestException(
+        'El cliente ya está registrado en esta tienda',
+      );
     }
 
     userLoyalty = this.repo.create({
@@ -177,7 +190,9 @@ export class UserLoyaltyService {
 
     // Actualizar datos del usuario global (si el ID almacenado en userCustomerId apunta a User)
     // Buscamos el usuario real usando el valor guardado
-    const user = await this.userRepo.findOne({ where: { id: userLoyalty.userCustomerId } });
+    const user = await this.userRepo.findOne({
+      where: { id: userLoyalty.userCustomerId },
+    });
 
     if (user) {
       if (email) user.email = email;
@@ -187,8 +202,8 @@ export class UserLoyaltyService {
       await this.userRepo.save(user);
 
       // Actualizar perfil UserCustomer
-      let customer = await this.userCustomerRepo.findOne({
-        where: { user: { id: user.id } }
+      const customer = await this.userCustomerRepo.findOne({
+        where: { user: { id: user.id } },
       });
 
       if (customer) {
@@ -209,29 +224,85 @@ export class UserLoyaltyService {
     return this.repo.remove(entity);
   }
 
-  async search(storeId: string, query: string) {
-    // Buscar en UserLoyalty filtrando por tienda y uniendo con User y UserCustomer
+  async search(storeId: string | undefined, query: string) {
+    const whereConditions: any[] = [];
+
+    // Si se proporciona storeId, buscar solo en esa tienda
+    if (storeId) {
+      whereConditions.push(
+        {
+          storeId,
+          user: { userCustomers: { phone: ILike(`%${query}%`) } },
+        },
+        {
+          storeId,
+          user: { phone: ILike(`%${query}%`) },
+        },
+        {
+          storeId,
+          user: { firstName: ILike(`%${query}%`) },
+        },
+        {
+          storeId,
+          user: { lastName: ILike(`%${query}%`) },
+        },
+      );
+    } else {
+      // Si no se proporciona storeId, buscar en todos los stores
+      whereConditions.push(
+        { user: { userCustomers: { phone: ILike(`%${query}%`) } } },
+        { user: { phone: ILike(`%${query}%`) } },
+        { user: { firstName: ILike(`%${query}%`) } },
+        { user: { lastName: ILike(`%${query}%`) } },
+      );
+    }
+
     return this.repo.find({
-      where: [
-        {
-          storeId,
-          user: { userCustomers: { phone: ILike(`%${query}%`) } }
-        },
-        {
-          storeId,
-          user: { phone: ILike(`%${query}%`) }
-        },
-        {
-          storeId,
-          user: { firstName: ILike(`%${query}%`) }
-        },
-        {
-          storeId,
-          user: { lastName: ILike(`%${query}%`) }
-        }
-      ],
+      where: whereConditions,
       relations: ['user', 'user.userCustomers'],
       take: 20,
     });
+  }
+
+  async getStoresByUserId(userId: string) {
+    // Obtener todas las user_loyalty del usuario y retornar info básica de tiendas
+    const userLoyalties = await this.repo.find({
+      where: { user: { id: userId } },
+      relations: ['store'],
+      select: [
+        'id',
+        'storeId',
+        'points',
+        'visits',
+        'referrals',
+        'redeemedPoints',
+      ],
+    });
+
+    // Retornar un array simplificado con solo info de tiendas
+    return userLoyalties.map((loyalty) => ({
+      id: loyalty.id,
+      storeId: loyalty.storeId,
+      storeName: loyalty.store?.name || 'Unknown Store',
+      points: loyalty.points,
+      visits: loyalty.visits,
+    }));
+  }
+
+  async getUserLoyaltyByUserAndStore(userId: string, storeId: string) {
+    // Obtener la loyalty info específica para una tienda del usuario
+    const userLoyalty = await this.repo.findOne({
+      where: {
+        user: { id: userId },
+        storeId: storeId,
+      },
+      relations: ['store', 'user', 'user.userCustomers'],
+    });
+
+    if (!userLoyalty) {
+      throw new NotFoundException('No tienes acceso a esta tienda');
+    }
+
+    return userLoyalty;
   }
 }
