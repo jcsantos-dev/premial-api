@@ -19,8 +19,8 @@ export class UserCustomer {
   @Column('character varying', { name: 'phone', length: 255 })
   phone: string;
 
-  @Column('date', { name: 'birthdate' })
-  birthdate: string;
+  @Column('date', { name: 'birthdate', nullable: true })
+  birthdate: string | null;
 
   @ManyToOne(() => User, (user) => user.userCustomers)
   @JoinColumn([{ name: 'user_id', referencedColumnName: 'id' }])

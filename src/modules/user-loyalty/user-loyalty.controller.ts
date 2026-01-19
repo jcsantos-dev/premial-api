@@ -41,6 +41,14 @@ export class UserLoyaltyController {
     return this.userLoyaltyService.search(storeId, query);
   }
 
+  @Get('verify-phone')
+  verifyPhone(
+    @Query('phone') phone: string,
+    @Query('storeId') storeId: string,
+  ) {
+    return this.userLoyaltyService.verifyPhone(phone, storeId);
+  }
+
   @Get('store/:storeId')
   findByStore(@Param('storeId') storeId: string) {
     return this.userLoyaltyService.findByStore(storeId);

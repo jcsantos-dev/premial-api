@@ -34,7 +34,7 @@ export class UserLoyaltyService {
     private userAuthRepo: Repository<UserAuth>,
     @InjectRepository(AuthType)
     private authTypeRepo: Repository<AuthType>,
-  ) {}
+  ) { }
 
   findAll() {
     return this.repo.find({
@@ -111,7 +111,7 @@ export class UserLoyaltyService {
       userCustomer = this.userCustomerRepo.create({
         user,
         phone,
-        birthdate,
+        birthdate: birthdate || '1900-01-01',
       });
       userCustomer = await this.userCustomerRepo.save(userCustomer);
 
@@ -140,7 +140,7 @@ export class UserLoyaltyService {
           userCustomer = this.userCustomerRepo.create({
             user,
             phone,
-            birthdate,
+            birthdate: birthdate || '1900-01-01',
           });
           userCustomer = await this.userCustomerRepo.save(userCustomer);
         }
@@ -304,5 +304,40 @@ export class UserLoyaltyService {
     }
 
     return userLoyalty;
+  }
+
+  async verifyPhone(phone: string, storeId: string) {
+    // 1. Buscar en UserCustomer (perfil global por teléfono)
+    const userCustomer = await this.userCustomerRepo.findOne({
+      where: { phone },
+      relations: ['user'],
+    });
+
+    if (!userCustomer) {
+      return { status: 'NEW_USER' };
+    }
+
+    // 2. Si existe el perfil, ver si ya está vinculado a ESTA tienda
+    const userLoyalty = await this.repo.findOne({
+      where: {
+        userCustomerId: userCustomer.user.id,
+        storeId: storeId,
+      },
+    });
+
+    if (userLoyalty) {
+      return {
+        status: 'FOUND_LOCAL',
+        user: userCustomer.user,
+        userCustomer,
+      };
+    }
+
+    // 3. Existe en plataforma pero NO en esta tienda
+    return {
+      status: 'FOUND_GLOBAL',
+      user: userCustomer.user,
+      userCustomer,
+    };
   }
 }
