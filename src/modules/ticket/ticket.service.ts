@@ -65,47 +65,53 @@ export class TicketService {
 
     // 4. Actualizar lealtad si hay usuario
     if (createTicketDto.qr_scanned_by_user_id) {
-      let loyalty = await this.userLoyaltyRepo.findOne({
-        where: {
-          userCustomerId: createTicketDto.qr_scanned_by_user_id,
-          storeId: createTicketDto.storeId
-        }
-      });
-
-      if (!loyalty) {
-        loyalty = this.userLoyaltyRepo.create({
-          userCustomerId: createTicketDto.qr_scanned_by_user_id,
-          storeId: createTicketDto.storeId,
-          points: 0,
-          visits: 0
-        });
-      }
-
-      loyalty.points = (Number(loyalty.points) || 0) + totalPoints;
-
-      if (createTicketDto.isVisit) {
-        loyalty.visits = (Number(loyalty.visits) || 0) + 1;
-      }
-
-      await this.userLoyaltyRepo.save(loyalty);
-
-      // 5. Crear Log de Actividad (UserLoyaltyLog)
-      // Primero obtener el usuario global (User)
+      // Primero obtener el usuario global (User) a través de UserCustomer
       const userCustomer = await this.userCustomerRepo.findOne({
         where: { id: createTicketDto.qr_scanned_by_user_id },
-        relations: ['user']
+        relations: ['user'],
       });
 
       if (userCustomer && userCustomer.user) {
+        const userId = userCustomer.user.id;
+
+        let loyalty = await this.userLoyaltyRepo.findOne({
+          where: {
+            userCustomerId: userId, // Usamos el ID del usuario global
+            storeId: createTicketDto.storeId,
+          },
+        });
+
+        if (!loyalty) {
+          loyalty = this.userLoyaltyRepo.create({
+            userCustomerId: userId,
+            storeId: createTicketDto.storeId,
+            points: 0,
+            visits: 0,
+          });
+        }
+
+        loyalty.points = (Number(loyalty.points) || 0) + totalPoints;
+
+        if (createTicketDto.isVisit) {
+          loyalty.visits = (Number(loyalty.visits) || 0) + 1;
+        }
+
+        await this.userLoyaltyRepo.save(loyalty);
+
+        // 5. Crear Log de Actividad (UserLoyaltyLog)
         // Buscar tipo 'compra' o 'purchase'
-        let actionType = await this.loyaltyActionTypeRepo.findOne({ where: { name: 'compra' } });
-        if (!actionType) actionType = await this.loyaltyActionTypeRepo.findOne({ where: { name: 'purchase' } });
-        // Fallback: si no existe, usar el ID 1 o crear uno (por ahora asumimos que existe o null es aceptable si es opcional, pero es requerido)
-        // Usaremos un ID conocido si falla: '1' suele ser compra.
+        let actionType = await this.loyaltyActionTypeRepo.findOne({
+          where: { name: 'compra' },
+        });
+        if (!actionType)
+          actionType = await this.loyaltyActionTypeRepo.findOne({
+            where: { name: 'purchase' },
+          });
+        // Fallback: si no existe, usar el ID 1 o crear uno
         const actionTypeId = actionType ? actionType.id : '1';
 
         const log = this.userLoyaltyLogRepo.create({
-          userId: userCustomer.user.id,
+          userId: userId,
           storeId: createTicketDto.storeId,
           loyaltyActionTypeId: actionTypeId,
           pointsDelta: totalPoints,

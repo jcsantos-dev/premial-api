@@ -48,8 +48,12 @@ export class AuthService {
       userStoreId?: string;
     };
   }> {
-    // 1. Buscar usuario por email en la tabla User
-    const user = await this.userService.findByEmail(email);
+    // 1. Buscar usuario por email o teléfono (soporte para login de cliente por teléfono)
+    let user = await this.userService.findByEmail(email);
+    if (!user) {
+      user = await this.userService.findByPhone(email);
+    }
+
     if (!user) {
       throw new UnauthorizedException('Credenciales inválidas');
     }

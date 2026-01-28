@@ -18,7 +18,7 @@ export interface JwtPayload {
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(private jwtService: JwtService) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -43,7 +43,13 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   private extractTokenFromRequest(request: Request): string | undefined {
-    // Primero intentar obtener de las cookies
+    // Primero intentar del header Authorization (Prioridad)
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    if (type === 'Bearer' && token) {
+      return token;
+    }
+
+    // Si no está en header, intentar obtener de las cookies
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const tokenFromCookie = request.cookies?.['access_token'];
     if (tokenFromCookie) {
@@ -51,8 +57,6 @@ export class JwtAuthGuard implements CanActivate {
       return tokenFromCookie;
     }
 
-    // Si no está en cookies, intentar del header Authorization
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    return undefined;
   }
 }
