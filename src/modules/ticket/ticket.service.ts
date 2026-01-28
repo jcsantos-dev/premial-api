@@ -150,6 +150,44 @@ export class TicketService {
     return this.findOne(id);
   }
 
+  async getMonthlySummary(storeId: string, year: number, month: number) {
+    // Create date range for the specified month
+    const startDate = new Date(year, month - 1, 1); // month is 0-indexed
+    const endDate = new Date(year, month, 0, 23, 59, 59); // Last day of month
+
+    // Find all tickets for the store in the specified month
+    const tickets = await this.ticketRepo
+      .createQueryBuilder('ticket')
+      .where('ticket.storeId = :storeId', { storeId })
+      .andWhere('ticket.generated_at >= :startDate', { startDate })
+      .andWhere('ticket.generated_at <= :endDate', { endDate })
+      .getMany();
+
+    // Calculate totals
+    const totalTickets = tickets.length;
+    const totalSales = tickets.reduce(
+      (sum, ticket) => sum + Number(ticket.total_amount || 0),
+      0,
+    );
+    const commission = totalSales * 0.02; // 2% commission
+
+    return {
+      year,
+      month,
+      storeId,
+      totalTickets,
+      totalSales: Number(totalSales.toFixed(2)),
+      commission: Number(commission.toFixed(2)),
+      commissionRate: 0.02,
+      tickets: tickets.map(t => ({
+        id: t.id,
+        total_amount: t.total_amount,
+        generated_at: t.generated_at,
+        status: t.status,
+      })),
+    };
+  }
+
   remove(id: number) {
     return this.ticketRepo.delete(id);
   }

@@ -18,7 +18,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @Controller('ticket')
 @UseGuards(JwtAuthGuard, StoreGuard)
 export class TicketController {
-  constructor(private readonly ticketService: TicketService) {}
+  constructor(private readonly ticketService: TicketService) { }
 
   @Post()
   create(
@@ -50,6 +50,15 @@ export class TicketController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTicketDto: UpdateTicketDto) {
     return this.ticketService.update(+id, updateTicketDto);
+  }
+
+  @Get('monthly-summary/:year/:month')
+  getMonthlySummary(
+    @Param('year') year: string,
+    @Param('month') month: string,
+    @CurrentUser('storeId') storeId: string,
+  ) {
+    return this.ticketService.getMonthlySummary(storeId, +year, +month);
   }
 
   @Delete(':id')
