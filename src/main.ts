@@ -11,6 +11,19 @@ async function bootstrap() {
     logger: ['error', 'warn', 'debug', 'log'],
   });
 
+  // Permitir solicitudes desde localhost:4200
+  app.enableCors({
+    origin: [
+      'http://localhost:4200',
+      'https://premial-bussiness-web.vercel.app',
+      'http://localhost:4300',
+      'https://premial-customers-web.vercel.app'
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
+    credentials: true,
+  });
+
   // 🔹 Prefijo global para todos los endpoints
   app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new JsonApiInterceptor());
@@ -43,18 +56,6 @@ async function bootstrap() {
 
   // 🔹 Swagger en api/docs
   SwaggerModule.setup('api/docs', app, document);
-
-  // Permitir solicitudes desde localhost:4200
-  app.enableCors({
-    origin: [
-      'http://localhost:4200',
-      'https://premial-bussiness-web.vercel.app',
-      'http://localhost:4300',
-      'https://premial-customers-web.vercel.app'
-    ],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-  });
 
   await app.listen(process.env.PORT ?? 3000);
 }
