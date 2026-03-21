@@ -45,8 +45,14 @@ export class JsonApiInterceptor<T> implements NestInterceptor<T, any> {
   }
 
   private pickAttributes(item: any) {
-    const { id, type, ...rest } = item;
-    return rest;
+    // Si es una instancia de clase (entity), necesitamos obtener sus propiedades
+    const attributes: any = {};
+    for (const key in item) {
+      if (key !== 'id' && key !== 'type' && typeof item[key] !== 'function') {
+        attributes[key] = item[key];
+      }
+    }
+    return attributes;
   }
 
   private pickRelationships(item: any) {

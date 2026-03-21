@@ -11,6 +11,7 @@ import { LoyaltyActionType } from './LoyaltyActionType';
 import { Program } from './Program';
 import { User } from './User';
 import { Store } from './Store';
+import { Ticket } from './Ticket';
 
 @Index('user_loyalty_log_pkey', ['id'], { unique: true })
 @Index('idx_user_loyalty_log_action', ['loyaltyActionTypeId'], {})
@@ -53,9 +54,19 @@ export class UserLoyaltyLog {
   })
   createdAt: Date;
 
+  @Column('bigint', { name: 'ticket_id', nullable: true })
+  ticket_id: string | null;
+
+  @Column('uuid', { name: 'coupon_id', nullable: true })
+  coupon_id: string | null;
+
   @ManyToOne(() => Coupon, (coupon) => coupon.userLoyaltyLogs)
   @JoinColumn([{ name: 'coupon_id', referencedColumnName: 'uuid' }])
   coupon: Coupon;
+
+  @ManyToOne(() => Ticket, (ticket) => ticket.userLoyaltyLogs)
+  @JoinColumn([{ name: 'ticket_id', referencedColumnName: 'id' }])
+  ticket: Ticket;
 
   @ManyToOne(
     () => LoyaltyActionType,

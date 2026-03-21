@@ -10,6 +10,7 @@ import {
 import { Store } from '../entities/Store';
 import { TicketItem } from '../entities/TicketItem';
 import { UserCustomer } from './UserCustomer';
+import { UserLoyaltyLog } from './UserLoyaltyLog';
 
 @Entity('ticket')
 export class Ticket {
@@ -46,6 +47,9 @@ export class Ticket {
 
   @OneToMany(() => TicketItem, (item) => item.ticket, { eager: true })
   items: TicketItem[];
+
+  @OneToMany(() => UserLoyaltyLog, (log) => log.ticket)
+  userLoyaltyLogs: UserLoyaltyLog[];
 
   @ManyToOne(() => Store, (store) => store.storeTickets)
   @JoinColumn([{ name: 'store_id', referencedColumnName: 'id' }])

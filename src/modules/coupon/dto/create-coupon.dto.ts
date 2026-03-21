@@ -62,5 +62,10 @@ export class CreateCouponDto {
     @IsString()
     @IsNotEmpty()
     storeId: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    productId?: string;
 }
 

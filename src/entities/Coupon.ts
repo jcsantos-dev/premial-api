@@ -40,6 +40,9 @@ export class Coupon {
   @Column('bigint', { name: 'store_id' })
   storeId: string;
 
+  @Column('bigint', { name: 'product_id', nullable: true })
+  productId: string | null;
+
   @Column('bigint', { name: 'required_quantity', nullable: true })
   requiredQuantity: string | null;
 
@@ -70,6 +73,10 @@ export class Coupon {
   @ManyToOne(() => Store, (store) => store.coupons)
   @JoinColumn([{ name: 'store_id', referencedColumnName: 'id' }])
   store: Store;
+
+  @ManyToOne('StoreProduct', { nullable: true })
+  @JoinColumn({ name: 'product_id' })
+  product: any;
 
   @OneToMany(() => UserLoyaltyLog, (userLoyaltyLog) => userLoyaltyLog.coupon)
   userLoyaltyLogs: UserLoyaltyLog[];

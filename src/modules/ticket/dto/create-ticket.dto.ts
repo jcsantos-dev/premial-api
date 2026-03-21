@@ -40,4 +40,12 @@ export class CreateTicketDto {
   @IsBoolean()
   @IsOptional()
   isVisit?: boolean;
+
+  @IsArray()
+  @IsOptional()
+  appliedCoupons?: { uuid: string; shouldResetVisits: boolean }[];
+
+  @IsString()
+  @IsOptional()
+  generatedAt?: string;
 }
