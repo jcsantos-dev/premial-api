@@ -11,6 +11,8 @@ async function bootstrap() {
     logger: ['error', 'warn', 'debug', 'log'],
   });
 
+  //
+
   // Permitir solicitudes desde localhost:4200
   app.enableCors({
     origin: [
