@@ -84,6 +84,17 @@ export class UserLoyaltyController {
     return this.userLoyaltyService.update(id, updateUserLoyaltyDto);
   }
 
+  @Post('reset-password-link/:userId')
+  @UseGuards(JwtAuthGuard)
+  sendResetLink(@Param('userId') userId: string) {
+    return this.userLoyaltyService.sendPasswordResetLink(userId);
+  }
+
+  @Post('reset-password')
+  confirmReset(@Body() body: { token: string; email: string; passwordHash: string }) {
+    return this.userLoyaltyService.resetPassword(body.token, body.email, body.passwordHash);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userLoyaltyService.remove(id);

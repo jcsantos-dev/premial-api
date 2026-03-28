@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Injectable,
   NotFoundException,
@@ -17,6 +18,7 @@ import { AuthType } from 'src/entities/AuthType';
 import { Coupon } from 'src/entities/Coupon';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserLoyaltyService {
@@ -37,7 +39,8 @@ export class UserLoyaltyService {
     private authTypeRepo: Repository<AuthType>,
     @InjectRepository(Coupon)
     private couponRepo: Repository<Coupon>,
-  ) { }
+    private jwtService: JwtService,
+  ) {}
 
   findAll() {
     return this.repo.find({
@@ -148,6 +151,38 @@ export class UserLoyaltyService {
           userCustomer = await this.userCustomerRepo.save(userCustomer);
         }
       }
+
+      // Asegurar que tenga credenciales (UserAuth) si se proporcionó password
+      if (password) {
+        let userAuth = await this.userAuthRepo.findOne({
+          where: { user: { id: user.id } },
+        });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        if (!userAuth) {
+          let authType = await this.authTypeRepo.findOne({
+            where: { name: 'local' },
+          });
+          if (!authType)
+            authType = await this.authTypeRepo.findOne({ where: { id: '1' } });
+
+          if (authType) {
+            userAuth = this.userAuthRepo.create({
+              userId: user.id,
+              authTypeId: Number(authType.id),
+              authUserProviderId: email || user.email,
+              passwordHash: hashedPassword,
+              createdAt: new Date(),
+            });
+            await this.userAuthRepo.save(userAuth);
+          }
+        } else {
+          // Si ya existe, actualizamos la contraseña por si acaso
+          userAuth.passwordHash = hashedPassword;
+          await this.userAuthRepo.save(userAuth);
+        }
+      }
     }
 
     // 2. Vincular a la Tienda (UserLoyalty)
@@ -213,6 +248,18 @@ export class UserLoyaltyService {
         if (birthdate) customer.birthdate = birthdate;
         if (phone) customer.phone = phone;
         await this.userCustomerRepo.save(customer);
+      }
+
+      // Actualizar contraseña si viene en el DTO
+      if (dto.password) {
+        const userAuth = await this.userAuthRepo.findOne({
+          where: { userId: user.id },
+        });
+
+        if (userAuth) {
+          userAuth.passwordHash = await bcrypt.hash(dto.password, 10);
+          await this.userAuthRepo.save(userAuth);
+        }
       }
     }
 
@@ -357,5 +404,145 @@ export class UserLoyaltyService {
       user: userCustomer.user,
       userCustomer,
     };
+  }
+
+  async sendPasswordResetLink(userId: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // Generar un token JWT seguro con expiración de 1 hora
+    const token = this.jwtService.sign(
+      {
+        email: user.email,
+        sub: user.id,
+        purpose: 'password_reset',
+      },
+      { expiresIn: '1h' },
+    );
+
+    // Link real para el cliente (apuntando al puerto 4300)
+    const resetLink = `http://localhost:4300/reset-password?token=${token}&email=${user.email}`;
+
+    console.log(
+      `[SECURE] Link de reset generado para ${user.email}: ${resetLink}`,
+    );
+
+    return {
+      message: 'Link de recuperación generado con éxito (Válido por 1 hora)',
+      debug_link: resetLink,
+    };
+  }
+
+  async resetPassword(token: string, email: string, newPassword: string) {
+    console.log(`[RESET] Iniciando reset para: ${email}`);
+    try {
+      // 1. Verificar JWT
+      let payload: any;
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        payload = this.jwtService.verify(token);
+        console.log(`[RESET] Payload decodificado:`, payload);
+      } catch (e) {
+        console.error(`[RESET] Error verificando JWT:`, e.message);
+        throw new BadRequestException(
+          'El enlace de recuperación no es válido o ha expirado.',
+        );
+      }
+
+      if (payload.email !== email || payload.purpose !== 'password_reset') {
+        console.warn(
+          `[RESET] Email o propósito no coinciden: expected ${email}, got ${payload.email}`,
+        );
+        throw new BadRequestException('Token no válido para esta cuenta.');
+      }
+
+      // Intentar encontrar UserAuth por varias vías
+      let userAuth = await this.userAuthRepo.findOne({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        where: { userId: payload.sub },
+      });
+
+      if (!userAuth) {
+        console.log(
+          `[RESET] No encontrado por userId directo, intentando por relación...`,
+        );
+        userAuth = await this.userAuthRepo.findOne({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          where: { user: { id: payload.sub } },
+        });
+      }
+
+      if (!userAuth) {
+        console.log(
+          `[RESET] No encontrado por ID, intentando por authUserProviderId (email)...`,
+        );
+        userAuth = await this.userAuthRepo.findOne({
+          where: { authUserProviderId: email },
+        });
+      }
+
+      if (!userAuth) {
+        console.warn(
+          `[RESET] Usuario con ID ${payload.sub} no tiene registro en UserAuth. Intentando crear uno...`,
+        );
+
+        // 2.1 Verificar que el usuario realmente exista
+        const user = await this.userRepo.findOne({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          where: { id: payload.sub },
+        });
+        if (!user) {
+          console.error(
+            `[RESET] Usuario con ID ${payload.sub} no existe en la tabla User`,
+          );
+          throw new BadRequestException('Usuario no encontrado.');
+        }
+
+        // 2.2 Buscar tipo de auth 'local'
+        let authType = await this.authTypeRepo.findOne({
+          where: { name: 'local' },
+        });
+        if (!authType)
+          authType = await this.authTypeRepo.findOne({ where: { id: '1' } });
+
+        if (!authType) {
+          throw new BadRequestException(
+            'Configuración de autenticación no encontrada.',
+          );
+        }
+
+        // 2.3 Crear registro UserAuth nuevo
+        userAuth = this.userAuthRepo.create({
+          userId: user.id,
+          authTypeId: Number(authType.id),
+          authUserProviderId: user.email, // Usamos el email del usuario real
+          passwordHash: '', // Se actualizará abajo
+          createdAt: new Date(),
+        });
+      }
+
+      console.log(
+        `[RESET] Actualizando contraseña para UserAuth ID: ${userAuth.id || 'NUEVO'}...`,
+      );
+
+      // 3. Actualizar password usando bcrypt
+      userAuth.passwordHash = await bcrypt.hash(newPassword, 10);
+      await this.userAuthRepo.save(userAuth);
+
+      console.log(
+        `[RESET] Contraseña actualizada exitosamente para ID: ${payload.sub}`,
+      );
+      return { message: 'Contraseña actualizada con éxito' };
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (error.name === 'TokenExpiredError') {
+        throw new BadRequestException(
+          'El link ha expirado (1 hora de validez).',
+        );
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      console.error(`[RESET] Error final:`, error.message);
+      throw error;
+    }
   }
 }
