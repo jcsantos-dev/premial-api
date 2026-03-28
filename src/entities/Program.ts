@@ -21,6 +21,9 @@ export class Program {
   @Column('bigint', { name: 'store_id' })
   storeId: string;
 
+  @Column('bigint', { name: 'program_type_id' })
+  programTypeId: string;
+
   @Column('boolean', { name: 'is_active', default: () => 'false' })
   isActive: boolean;
 

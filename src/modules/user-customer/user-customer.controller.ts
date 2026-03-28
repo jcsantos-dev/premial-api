@@ -11,7 +11,7 @@ import { UserCustomerService } from './user-customer.service';
 import { CreateUserCustomerDto } from './dto/create-user-customer.dto';
 import { UpdateUserCustomerDto } from './dto/update-user-customer.dto';
 
-@Controller('UserCustomer-customer')
+@Controller('user-customer')
 export class UserCustomerController {
   constructor(private readonly UserCustomerService: UserCustomerService) {}
 

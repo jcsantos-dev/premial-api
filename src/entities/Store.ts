@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   Column,
   Entity,
@@ -44,6 +45,9 @@ export class Store {
 
   @Column('character varying', { name: 'phone_number', nullable: true, length: 20 })
   phone_number: string | null;
+
+  // @Column('boolean', { name: 'is_active', default: true })
+  isActive: boolean;
 
   @OneToMany(() => Coupon, (coupon) => coupon.store)
   coupons: Coupon[];

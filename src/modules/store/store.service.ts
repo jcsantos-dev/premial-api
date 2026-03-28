@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
@@ -28,24 +29,23 @@ export class StoreService {
     private storeProductRepo: Repository<StoreProduct>,
     @InjectRepository(Ticket)
     private ticketRepo: Repository<Ticket>,
-  ) { }
+  ) {}
 
   findAll() {
-    return this.repo.find({
-      relations: [
-        'coupons',
-        'levelConfs.levelType',
-        'programs.programType',
-        'streakConfs',
-        'userLevels',
-        'userLoyalties',
-        'userLoyaltyLogs',
-        'userStreaks',
-        'storeProducts',
-        'storeTickets',
-        'storeModules',
-      ],
-    }); // devuelve todos los couponTypes
+    return this.repo.createQueryBuilder('store')
+      .select([
+        'store.id',
+        'store.uuid',
+        'store.name',
+        'store.description',
+        'store.logo_url',
+        'store.square_logo_url',
+        'store.location_url',
+        'store.phone_number',
+        //'store.isActive'
+      ])
+      .orderBy('store.name', 'ASC')
+      .getMany();
   }
 
   async findOne(id: string) {

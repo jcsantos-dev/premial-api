@@ -24,6 +24,9 @@ export class UserStore {
   @Column('bigint', { name: 'store_id' })
   storeId: string;
 
+  @Column('bigint', { name: 'role_id', nullable: true })
+  roleId: string | null;
+
   @ManyToOne(() => UserRole, (userRole) => userRole.userStores)
   @JoinColumn([{ name: 'role_id', referencedColumnName: 'id' }])
   role: UserRole;

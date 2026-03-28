@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -19,7 +20,8 @@ async function bootstrap() {
       'http://localhost:4200',
       'https://premial-bussiness-web.vercel.app',
       'http://localhost:4300',
-      'https://premial-customers-web.vercel.app'
+      'https://premial-customers-web.vercel.app',
+      'http://localhost:4400',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
