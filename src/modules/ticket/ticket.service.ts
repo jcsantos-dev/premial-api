@@ -1,4 +1,5 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { Injectable } from '@nestjs/common';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -121,12 +122,15 @@ export class TicketService {
             // Validar requisitos por Tipo de Programa
             const reqVisits = Number(coupon.requiredQuantity) || 0;
             const reqAmount = Number(coupon.requiredAmount) || 0;
+            const reqQuantity = Number(coupon.requiredQuantity) || 0;
             let isEligible = true;
 
             if (coupon.programTypeId === '1') { // Visitas
               isEligible = loyalty.visits >= reqVisits;
             } else if (coupon.programTypeId === '2') { // Puntos
               isEligible = loyalty.points >= reqAmount;
+            } else if (coupon.programTypeId === '3') { // Recomendación
+              isEligible = loyalty.referrals >= (reqQuantity || 1);
             } else { // Ambos o Genérico
               isEligible = (loyalty.visits >= reqVisits && loyalty.points >= reqAmount);
             }
@@ -147,27 +151,64 @@ export class TicketService {
 
             const cTitle = (coupon.title || '').toLowerCase();
             const cDesc = (coupon.description || '').toLowerCase();
+            const rVal = Number(coupon.rewardValue) || 0;
 
-            if (cTitle.includes('%') || cDesc.includes('%')) {
-              couponDiscount = (baseAmount * (reqAmount > 0 ? reqAmount : 0)) / 100;
+            if (cTitle.includes('%') || cDesc.includes('%') || String(coupon.rewardTypeId) === '2') {
+              const percent = rVal > 0 ? rVal : (reqAmount > 0 ? reqAmount : 0);
+              couponDiscount = (baseAmount * percent) / 100;
+            } else if (String(coupon.rewardTypeId) === '3') {
+              // Regalo / Gratis: cubre el precio unitario del item si hay productId
+              if (coupon.productId) {
+                const item = createTicketDto.items.find(it => String(it.productId) === String(coupon.productId));
+                couponDiscount = item ? Number(item.price_unit) : 0;
+              } else {
+                couponDiscount = rVal;
+              }
             } else {
-              couponDiscount = Math.min(reqAmount, baseAmount);
+              couponDiscount = rVal > 0 ? Math.min(rVal, baseAmount) : Math.min(reqAmount, baseAmount);
             }
 
             console.log(`[DEBUG] Applied coupon ${coupon.title}. Discount: ${couponDiscount}`);
+            // 🔹 LÓGICA DE DEDUCCIÓN ESTRICTA POR TIPO DE PROGRAMA
+            // 1=Visitas, 2=Puntos, 3=Recomendación
+            const pType = String(coupon.programTypeId);
+            const valQuantity = Number(coupon.requiredQuantity) || 0;
+            const valAmount = Number(coupon.requiredAmount) || 0;
+            const deductionValue = valQuantity > 0 ? valQuantity : valAmount;
+
+            if (pType === '2') {
+              const before = Number(loyalty.points) || 0;
+              loyalty.points = Math.max(0, before - deductionValue);
+            } 
+            else if (pType === '1') {
+              if (couponData.shouldResetVisits !== false) {
+                const before = Number(loyalty.visits) || 0;
+                loyalty.visits = Math.max(0, before - deductionValue);
+              }
+            } 
+            else if (pType === '3') {
+              const before = Number(loyalty.referrals) || 0;
+              const cost = valQuantity || 1;
+              console.log(`[REFERRAL] Deducting referrals. User: ${userId}, Before: ${before}, Cost: ${cost}`);
+              loyalty.referrals = Math.max(0, before - cost);
+            }
+
             discountAmount += couponDiscount;
             redeemedCoupons.push(coupon);
-
-            // Descontar del registro
-            if (couponData.shouldResetVisits !== false) loyalty.visits = Math.max(0, loyalty.visits - reqVisits);
-            loyalty.points = Math.max(0, loyalty.points - reqAmount);
           }
         }
 
-        // Sumar beneficios de esta compra si no hubo canje
+        // Sumar beneficios de esta compra SOLO si NO hubo canje (Regla de negocio solicitada)
         if (redeemedCoupons.length === 0) {
-          loyalty.points = (Number(loyalty.points) || 0) + totalPoints;
-          if (createTicketDto.isVisit) loyalty.visits = (Number(loyalty.visits) || 0) + 1;
+          const beforeP = Number(loyalty.points) || 0;
+          const beforeV = Number(loyalty.visits) || 0;
+          
+          loyalty.points = beforeP + totalPoints;
+          if (createTicketDto.isVisit) loyalty.visits = beforeV + 1;
+          
+          console.log(`[EARN] Beneficios compra: +${totalPoints} pts, +${createTicketDto.isVisit ? 1 : 0} vis. (Total: P:${loyalty.points}, V:${loyalty.visits})`);
+        } else {
+          console.log(`[SKIP] No se suman puntos/visitas de la compra porque se canjeó un cupón.`);
         }
 
         await this.userLoyaltyRepo.save(loyalty);
@@ -195,33 +236,76 @@ export class TicketService {
       const globalUserId = userCustomer?.user?.id;
       
       if (globalUserId) {
-        let actionType = await this.loyaltyActionTypeRepo.findOne({ where: { name: 'compra' } });
-        const actionTypeId = actionType ? actionType.id : '1';
+        // 4.1 Obtener tipos de acción necesarios
+        const actionTypes = await this.loyaltyActionTypeRepo.find();
+        const getActionId = (code: string) => actionTypes.find(t => t.code === code)?.id || '1';
 
         console.log(`[DEBUG] Creating logs. Redeemed coupons: ${redeemedCoupons.length}`);
-        const baseLogData = {
+        
+        // Log de COMPRA (Siempre se registra si hay ticket)
+        await this.userLoyaltyLogRepo.save(this.userLoyaltyLogRepo.create({
           userId: globalUserId,
           storeId: createTicketDto.storeId,
-          loyaltyActionTypeId: actionTypeId,
-          pointsDelta: redeemedCoupons.length > 0 ? 0 : totalPoints,
-          visitsDelta: (redeemedCoupons.length === 0 && createTicketDto.isVisit) ? 1 : 0,
+          loyaltyActionTypeId: getActionId('PURCHASE'),
+          pointsDelta: 0,
+          visitsDelta: 0,
           ticket_id: String(savedTicket.id),
           createdAt: ticketDate,
-        };
+          note: `Compra ticket #${savedTicket.id} - Total: $${savedTicket.total_amount}`,
+        }));
 
+        // Log de PUNTOS (Solo si ganó puntos)
+        if (redeemedCoupons.length === 0 && totalPoints > 0) {
+          await this.userLoyaltyLogRepo.save(this.userLoyaltyLogRepo.create({
+            userId: globalUserId,
+            storeId: createTicketDto.storeId,
+            loyaltyActionTypeId: getActionId('EARN_POINTS'),
+            pointsDelta: totalPoints,
+            visitsDelta: 0,
+            ticket_id: String(savedTicket.id),
+            createdAt: ticketDate,
+            note: `Puntos ganados por ticket #${savedTicket.id}`,
+          }));
+        }
+
+        // Log de VISITA (Solo si se marcó como visita y no hubo canje que resetee)
+        if (redeemedCoupons.length === 0 && createTicketDto.isVisit) {
+          await this.userLoyaltyLogRepo.save(this.userLoyaltyLogRepo.create({
+            userId: globalUserId,
+            storeId: createTicketDto.storeId,
+            loyaltyActionTypeId: getActionId('ADD_VISIT'),
+            pointsDelta: 0,
+            visitsDelta: 1,
+            ticket_id: String(savedTicket.id),
+            createdAt: ticketDate,
+            note: `Visita registrada por ticket #${savedTicket.id}`,
+          }));
+        }
+
+        // Logs de CUPONES (Si hubo canjes)
         if (redeemedCoupons.length > 0) {
           for (const coupon of redeemedCoupons) {
+            // Determinar deltas reales según el tipo de programa y valor unificado
+            const pType = String(coupon.programTypeId);
+            const valQuantity = Number(coupon.requiredQuantity) || 0;
+            const valAmount = Number(coupon.requiredAmount) || 0;
+            const finalValue = valQuantity > 0 ? valQuantity : valAmount;
+
+            const isPoints = pType === '2';
+            const isVisits = pType === '1';
+            
             await this.userLoyaltyLogRepo.save(this.userLoyaltyLogRepo.create({
-              ...baseLogData,
+              userId: globalUserId,
+              storeId: createTicketDto.storeId,
+              loyaltyActionTypeId: getActionId('REDEEM_COUPON'),
+              pointsDelta: isPoints ? -finalValue : (pType !== '1' && valAmount > 0 ? -valAmount : 0),
+              visitsDelta: isVisits ? -finalValue : (pType !== '2' && valQuantity > 0 ? -valQuantity : 0),
+              ticket_id: String(savedTicket.id),
+              createdAt: ticketDate,
               note: `Canje de cupón: ${coupon.title} en ticket #${savedTicket.id}`,
               coupon_id: coupon.uuid,
             }));
           }
-        } else {
-          await this.userLoyaltyLogRepo.save(this.userLoyaltyLogRepo.create({
-            ...baseLogData,
-            note: `Compra ticket #${savedTicket.id} - Total: $${savedTicket.total_amount}`,
-          }));
         }
       }
     }

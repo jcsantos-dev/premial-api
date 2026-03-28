@@ -67,5 +67,15 @@ export class CreateCouponDto {
     @IsString()
     @IsOptional()
     productId?: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    rewardValue?: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    rewardConfig?: string;
 }
 

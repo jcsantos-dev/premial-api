@@ -28,4 +28,8 @@ export class CreateUserLoyaltyDto {
 
     @IsNotEmpty()
     storeId: string;
+
+    @IsString()
+    @IsOptional()
+    referredById?: string;
 }

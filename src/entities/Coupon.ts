@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   Column,
   Entity,
@@ -57,6 +58,12 @@ export class Coupon {
 
   @Column('boolean', { name: 'is_active', default: () => 'true' })
   isActive: boolean;
+
+  @Column('numeric', { name: 'reward_value', precision: 10, scale: 2, nullable: true })
+  rewardValue: string | null;
+
+  @Column('character varying', { name: 'reward_config', length: 255, nullable: true })
+  rewardConfig: string | null;
 
   @ManyToOne(() => CouponType, (couponType) => couponType.coupons)
   @JoinColumn([{ name: 'coupon_type_id', referencedColumnName: 'id' }])

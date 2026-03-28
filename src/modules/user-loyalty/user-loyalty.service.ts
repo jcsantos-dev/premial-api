@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Injectable,
@@ -16,6 +17,8 @@ import { UserPlatform } from 'src/entities/UserPlatform';
 import { UserAuth } from 'src/entities/UserAuth';
 import { AuthType } from 'src/entities/AuthType';
 import { Coupon } from 'src/entities/Coupon';
+import { UserLoyaltyLog } from 'src/entities/UserLoyaltyLog';
+import { LoyaltyActionType } from 'src/entities/LoyaltyActionType';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -39,6 +42,10 @@ export class UserLoyaltyService {
     private authTypeRepo: Repository<AuthType>,
     @InjectRepository(Coupon)
     private couponRepo: Repository<Coupon>,
+    @InjectRepository(UserLoyaltyLog)
+    private userLoyaltyLogRepo: Repository<UserLoyaltyLog>,
+    @InjectRepository(LoyaltyActionType)
+    private loyaltyActionTypeRepo: Repository<LoyaltyActionType>,
     private jwtService: JwtService,
   ) {}
 
@@ -63,7 +70,7 @@ export class UserLoyaltyService {
   }
 
   async create(dto: CreateUserLoyaltyDto) {
-    const { email, firstName, lastName, phone, birthdate, password, storeId } =
+    const { email, firstName, lastName, phone, birthdate, password, storeId, referredById } =
       dto;
 
     // 1. Buscar si ya existe el usuario globalmente
@@ -186,14 +193,9 @@ export class UserLoyaltyService {
     }
 
     // 2. Vincular a la Tienda (UserLoyalty)
-    // El DDL indica que user_loyalty apunta a user_id (llave fk_user_loyalty_user)
-    // pero la columna en el código restaurado es userCustomerId.
-    // Para resolver el error de constraint "Key (user_customer_id)=(12) is not present in table user"
-    // debemos pasar el ID del USUARIO en esa columna si el constraint apunta a la tabla user.
-
     let userLoyalty = await this.repo.findOne({
       where: {
-        userCustomerId: user.id, // Pasamos user.id para satisfacer fk_user_loyalty_user
+        userCustomerId: user.id,
         storeId: storeId,
       },
     });
@@ -205,7 +207,7 @@ export class UserLoyaltyService {
     }
 
     userLoyalty = this.repo.create({
-      userCustomerId: user.id, // Pasamos user.id
+      userCustomerId: user.id,
       storeId: storeId,
       points: 0,
       visits: 0,
@@ -213,7 +215,51 @@ export class UserLoyaltyService {
       redeemedPoints: 0,
     });
 
-    return this.repo.save(userLoyalty);
+    const savedLoyalty = await this.repo.save(userLoyalty);
+
+    // 3. Manejar Recomendación (Referral)
+    if (referredById) {
+      const referrerLoyalty = await this.repo.findOne({
+        where: { id: referredById, storeId },
+        relations: ['user']
+      });
+
+      if (referrerLoyalty) {
+        // 3.1 Incrementar contador de referidos del referente
+        referrerLoyalty.referrals = (Number(referrerLoyalty.referrals) || 0) + 1;
+        await this.repo.save(referrerLoyalty);
+
+        // 3.2 Buscar tipos de acción
+        const actionTypes = await this.loyaltyActionTypeRepo.find();
+        const getActionId = (code: string) => actionTypes.find(t => t.code === code)?.id || '3';
+
+        // 3.3 Registrar Log para el REFERENTE
+        await this.userLoyaltyLogRepo.save(this.userLoyaltyLogRepo.create({
+          userId: referrerLoyalty.userCustomerId,
+          storeId: storeId,
+          loyaltyActionTypeId: getActionId('REFERRAL'),
+          pointsDelta: 0,
+          visitsDelta: 0,
+          note: `Recomendó a un nuevo cliente: ${user.firstName} ${user.lastName}`,
+          createdAt: new Date(),
+        }));
+
+        // 3.4 Registrar Log para el REFERIDO (el nuevo usuario)
+        await this.userLoyaltyLogRepo.save(this.userLoyaltyLogRepo.create({
+          userId: user.id,
+          storeId: storeId,
+          loyaltyActionTypeId: getActionId('REFERRAL'),
+          pointsDelta: 0,
+          visitsDelta: 0,
+          note: `Vino recomendado por: ${referrerLoyalty.user.firstName} ${referrerLoyalty.user.lastName}`,
+          createdAt: new Date(),
+        }));
+
+        console.log(`[REFERRAL] Registro exitoso. Referente: ${referrerLoyalty.user.id}, Referido: ${user.id}`);
+      }
+    }
+
+    return savedLoyalty;
   }
 
   async update(id: string, dto: UpdateUserLoyaltyDto) {

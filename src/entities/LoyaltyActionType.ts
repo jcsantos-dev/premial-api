@@ -19,6 +19,12 @@ export class LoyaltyActionType {
   @Column('character varying', { name: 'description', length: 255 })
   description: string;
 
+  @Column('character varying', { name: 'code', length: 50, nullable: true })
+  code: string;
+
+  @Column('character varying', { name: 'label', length: 100, nullable: true })
+  label: string;
+
   @OneToMany(
     () => UserLoyaltyLog,
     (userLoyaltyLog) => userLoyaltyLog.loyaltyActionType,
