@@ -22,6 +22,7 @@ async function bootstrap() {
       'http://localhost:4300',
       'https://premial-customers-web.vercel.app',
       'http://localhost:4400',
+      'https://premial-admin.vercel.app'
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
