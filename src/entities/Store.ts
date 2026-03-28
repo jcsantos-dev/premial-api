@@ -39,6 +39,12 @@ export class Store {
   @Column('character varying', { name: 'square_logo_url', nullable: true, length: 500 })
   square_logo_url: string | null;
 
+  @Column('character varying', { name: 'location_url', nullable: true, length: 500 })
+  location_url: string | null;
+
+  @Column('character varying', { name: 'phone_number', nullable: true, length: 20 })
+  phone_number: string | null;
+
   @OneToMany(() => Coupon, (coupon) => coupon.store)
   coupons: Coupon[];
 

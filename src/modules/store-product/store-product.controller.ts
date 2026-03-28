@@ -16,11 +16,12 @@ import { StoreGuard } from '../../common/guards/store.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('store-product')
-@UseGuards(JwtAuthGuard, StoreGuard)
+@UseGuards(JwtAuthGuard)
 export class StoreProductController {
   constructor(private readonly storeProductService: StoreProductService) {}
 
   @Post()
+  @UseGuards(StoreGuard)
   create(
     @Body() createStoreProductDto: CreateStoreProductDto,
     @CurrentUser('storeId') storeId: string,
@@ -33,6 +34,7 @@ export class StoreProductController {
   }
 
   @Get()
+  @UseGuards(StoreGuard)
   findAll(@CurrentUser('storeId') storeId: string) {
     return this.storeProductService.findByStore(+storeId);
   }
@@ -48,6 +50,7 @@ export class StoreProductController {
   }
 
   @Patch(':id')
+  @UseGuards(StoreGuard)
   update(
     @Param('id') id: string,
     @Body() updateStoreProductDto: UpdateStoreProductDto,
@@ -56,6 +59,7 @@ export class StoreProductController {
   }
 
   @Delete(':id')
+  @UseGuards(StoreGuard)
   remove(@Param('id') id: string) {
     return this.storeProductService.remove(+id);
   }
